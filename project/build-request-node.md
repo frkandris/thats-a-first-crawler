@@ -19,7 +19,8 @@ An [n8n](/tech/n8n.md) Code node ("Run Once for All Items"). It turns raw
    [Get sent](/project/dedup-datatable.md). Within-run duplicates are dropped too.
 3. **Rank candidates for analysis**: first the ones whose caption matches genuine first-time signals
    (`first time`, `day one`, `először`, `learning to`, …), then by engagement; keep the top **30**.
-   Each Apify actor returns **50 per hashtag** (`resultsLimit`/`resultsPerPage=50`), so the pool is large.
+   Each Apify actor returns **12 per hashtag** (`resultsLimit`/`resultsPerPage=12`) — tuned to a cost
+   target; see [decisions](/project/decisions.md).
 4. **Download images as base64** — for each candidate:
    ```js
    const bin = await this.helpers.httpRequest({ url: cands[i].image, encoding: 'arraybuffer', timeout: 15000 });

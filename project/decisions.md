@@ -9,9 +9,15 @@ timestamp: 2026-07-04T00:00:00Z
 
 Non-obvious choices, newest context on top. Each is a small ADR.
 
-## 30-day window + fetch more (2026-07-04)
-The 7-day window plus small `resultsLimit` kept surfacing the same viral posts. Raised the search
-window to **30 days** and Apify to **50 per hashtag** (Apify is cheap) for a much larger, fresher pool.
+## Apify cost budget (~$10/month)
+Apify's IG/TikTok scrapers are **pay-per-result** (~$0.0023/result IG, ~$0.003/result TikTok; no base
+fee). At 50/hashtag × 5 hashtags × 2 platforms a run cost ~$1.33 → ~$40/mo. Target is **$10/mo**
+(~$0.33/run), so `resultsLimit`/`resultsPerPage` were set to **12/hashtag** (~$0.32/run → ~$9.6/mo).
+This is the Apify cost only; the Claude vision call (up to 30 images/run) is billed separately (~$8/mo).
+
+## 30-day window (2026-07-04)
+The 7-day window plus a small result count kept surfacing the same viral posts. Raised the search
+window to **30 days** for a fresher, more varied pool (result count later tuned down for cost, above).
 
 ## Robust URL dedup (canon)
 Repeats slipped through because the same post can be scraped in different URL formats

@@ -30,3 +30,5 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   and generalized the internal n8n host and the workflow/project/table IDs to placeholders
   (`https://<n8n-host>/workflow/<workflow-id>`, etc.). Recipient/sender are now described as
   "configured in the Config node / Gmail credential".
+- **Ingest** — Apify cost tuning: `resultsLimit`/`resultsPerPage` **50 → 12** per hashtag to hit a
+  ~$10/month Apify budget (~$0.32/run). Re-published; wiki synced (pipeline, build-request-node, decisions).
