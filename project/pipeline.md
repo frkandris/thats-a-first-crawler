@@ -2,13 +2,13 @@
 type: Pipeline
 title: Workflow pipeline
 description: The n8n node chain and data flow of That's a First Digest, node by node.
-resource: https://n8n.strt.hu/workflow/JEHhYDEEklYRoIHb
+resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [pipeline, n8n, dataflow]
 timestamp: 2026-07-04T00:00:00Z
 ---
 
-The [project](/project/thats-a-first-digest.md) is a single [n8n](/tech/n8n.md) workflow
-(id `JEHhYDEEklYRoIHb`). Two branches leave **Config**: the main scrape/assemble/send chain, and a
+The [project](/project/thats-a-first-digest.md) is a single [n8n](/tech/n8n.md) workflow.
+Two branches leave **Config**: the main scrape/assemble/send chain, and a
 parallel read of the [dedup table](/project/dedup-datatable.md).
 
 ## Node chain

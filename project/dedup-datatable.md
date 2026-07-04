@@ -2,7 +2,7 @@
 type: Data Model
 title: Dedup Data Table
 description: The n8n Data Table that records already-sent posts so the digest never repeats an item.
-resource: https://n8n.strt.hu/projects/fu7pZOjdTaVgVqZ6/datatables/LLAn9CH8qPA6LOPo
+resource: https://<n8n-host>/projects/<project-id>/datatables/<table-id>
 tags: [datatable, dedup, storage]
 timestamp: 2026-07-04T00:00:00Z
 ---

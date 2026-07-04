@@ -2,7 +2,7 @@
 type: Code Node
 title: Build request node
 description: Normalizes IG/TikTok candidates, filters and dedups, downloads images as base64, and assembles the Claude vision request.
-resource: https://n8n.strt.hu/workflow/JEHhYDEEklYRoIHb
+resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [code, n8n, claude, vision, base64]
 timestamp: 2026-07-04T00:00:00Z
 ---

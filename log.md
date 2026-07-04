@@ -28,3 +28,5 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   dedup-datatable / decisions / runbook.
 - **Lint** — Privacy pass: removed the "ChatGPT agent replica" framing and all personal email addresses
   from the wiki; recipient/sender are now described as "configured in the Config node / Gmail credential".
+  Also generalized the internal n8n host and the workflow/project/table IDs to placeholders
+  (`https://<n8n-host>/workflow/<workflow-id>`, etc.).

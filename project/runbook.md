@@ -2,7 +2,7 @@
 type: Playbook
 title: Runbook
 description: How to operate, test, and troubleshoot the digest workflow.
-resource: https://n8n.strt.hu/workflow/JEHhYDEEklYRoIHb
+resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [operations, runbook, troubleshooting]
 timestamp: 2026-07-04T00:00:00Z
 ---

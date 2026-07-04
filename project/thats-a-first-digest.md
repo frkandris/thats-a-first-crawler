@@ -2,7 +2,7 @@
 type: Project
 title: That's a First Digest
 description: A daily n8n workflow that scrapes Instagram/TikTok and emails a Hungarian digest of people trying something for the first time.
-resource: https://n8n.strt.hu/workflow/JEHhYDEEklYRoIHb
+resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [project, n8n, digest, strt]
 timestamp: 2026-07-04T00:00:00Z
 ---

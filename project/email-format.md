@@ -2,7 +2,7 @@
 type: Spec
 title: Email item format
 description: The exact per-item HTML layout of the digest email.
-resource: https://n8n.strt.hu/workflow/JEHhYDEEklYRoIHb
+resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [email, html, format, hungarian]
 timestamp: 2026-07-04T00:00:00Z
 ---

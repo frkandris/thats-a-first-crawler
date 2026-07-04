@@ -2,7 +2,7 @@
 type: Algorithm
 title: Ranking algorithm
 description: Deterministic scoring and sort that orders the daily picks from Claude-extracted, vision-derived parameters.
-resource: https://n8n.strt.hu/workflow/JEHhYDEEklYRoIHb
+resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [ranking, scoring, vision]
 timestamp: 2026-07-04T00:00:00Z
 ---

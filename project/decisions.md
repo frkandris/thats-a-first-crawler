@@ -2,7 +2,7 @@
 type: Decision Log
 title: Design decisions
 description: Why the system is built the way it is — the non-obvious choices and what forced them.
-resource: https://n8n.strt.hu/workflow/JEHhYDEEklYRoIHb
+resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [decisions, adr, rationale]
 timestamp: 2026-07-04T00:00:00Z
 ---

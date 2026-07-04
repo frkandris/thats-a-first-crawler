@@ -2,12 +2,12 @@
 type: Tool
 title: n8n
 description: The self-hosted workflow-automation platform that runs the digest.
-resource: https://n8n.strt.hu
+resource: https://<n8n-host>
 tags: [n8n, automation, platform]
 timestamp: 2026-07-04T00:00:00Z
 ---
 
-[n8n](https://n8n.io) is a node-based workflow-automation tool. STRT runs it at `https://n8n.strt.hu`.
+[n8n](https://n8n.io) is a node-based workflow-automation tool. STRT runs a self-hosted instance.
 The [pipeline](/project/pipeline.md) is one n8n workflow.
 
 ## Concepts used here
@@ -34,4 +34,4 @@ The [pipeline](/project/pipeline.md) is one n8n workflow.
 
 ## This workflow
 
-- Id `JEHhYDEEklYRoIHb`, Personal project `fu7pZOjdTaVgVqZ6`. See [runbook](/project/runbook.md).
+- Runs as a single workflow in a Personal project. See [runbook](/project/runbook.md).
