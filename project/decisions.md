@@ -9,6 +9,28 @@ timestamp: 2026-07-04T00:00:00Z
 
 Non-obvious choices, newest context on top. Each is a small ADR.
 
+## 30-day window + fetch more (2026-07-04)
+The 7-day window plus small `resultsLimit` kept surfacing the same viral posts. Raised the search
+window to **30 days** and Apify to **50 per hashtag** (Apify is cheap) for a much larger, fresher pool.
+
+## Robust URL dedup (canon)
+Repeats slipped through because the same post can be scraped in different URL formats
+(`/reel/ABC` vs `/p/ABC`, trailing slash, query string). Dedup now compares a **canonicalized** URL on
+both sides (`canon()`), so format differences no longer defeat it. See
+[dedup-datatable](/project/dedup-datatable.md). Known limitation: *different* posts about the same viral
+event (reposts) share no URL and are not deduped — content-level dedup was considered and not built.
+
+## Prioritize genuine first-time signals for analysis
+Only the top candidates by engagement were vision-analyzed, and high-engagement `#thatsafirst` posts skew
+viral/fun — so few genuine firsts survived the filter (once a run returned a single item). Candidates are
+now ranked for analysis by **first-time keyword signal first** (`first time`, `day one`, `először`, …),
+then engagement, and the analyzed pool was raised **15 → 30**. This reliably yields ~5 genuine picks.
+
+## Exclude fun/commercial non-firsts
+A "5DX cinema" item was picked — a consumed entertainment product, not a personal first. The selection
+prompt now explicitly excludes ads/promos, paid attractions/entertainment products, and generic "fun"
+content, and prefers fewer but genuine picks (down to 0). See [ranking-algorithm](/project/ranking-algorithm.md).
+
 ## Discovery via Apify, not web search
 The original was a ChatGPT agent using web search; that could not target IG/TikTok reliably. We use
 [Apify](/tech/apify.md) hashtag scrapers instead, assembled by one [Claude](/tech/claude-vision-api.md) call.

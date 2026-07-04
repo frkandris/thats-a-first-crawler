@@ -20,3 +20,9 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
 - **Ingest** — Repo pushed to GitHub (`frkandris/thats-a-first-crawler`); README polished with badges;
   Schedule node renamed "Every day 07:00" → "Every day 06:00" and re-published; wiki updated to drop the
   label-mismatch caveat (lint: consistency).
+- **Ingest** — Quality pass after a live run returned repeats + a fun "5DX cinema" item: search window
+  **7 → 30 days**, Apify **50/hashtag**, robust **canon()** URL dedup, first-time-signal ranking with the
+  analyzed pool **15 → 30**, and a stricter selection prompt (excludes ads/paid attractions/generic fun).
+  Verified: a run then returned 5 genuine, varied firsts (analog photography, pottery, printmaking,
+  foraged-raspberry sorbet). Re-published. Wiki synced across pipeline / build-request-node /
+  dedup-datatable / decisions / runbook.

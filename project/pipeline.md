@@ -22,9 +22,9 @@ Schedule (06:00) → Config ─┬─► Apify Instagram ─► Apify TikTok ─
 | Node | Type | Role |
 |---|---|---|
 | **Every day 06:00** | Schedule Trigger | Fires daily 06:00 Europe/Berlin. |
-| **Config** | Set | `recipient`, `subjectPrefix`, `runDate`, `lookbackDays=7`. |
-| **Apify - Instagram** | HTTP Request | `apify~instagram-hashtag-scraper` run-sync; `Execute Once`, `memory=4096`. |
-| **Apify - TikTok** | HTTP Request | `clockworks~tiktok-scraper` run-sync; `Execute Once`, `memory=4096`. |
+| **Config** | Set | `recipient`, `lookbackDays=30`. |
+| **Apify - Instagram** | HTTP Request | `apify~instagram-hashtag-scraper` run-sync; `Execute Once`, `memory=4096`, `resultsLimit=50`. |
+| **Apify - TikTok** | HTTP Request | `clockworks~tiktok-scraper` run-sync; `Execute Once`, `memory=4096`, `resultsPerPage=50`. |
 | **Build request** | Code | See [build-request-node](/project/build-request-node.md). |
 | **Claude** | HTTP Request | POST `api.anthropic.com/v1/messages`, model `claude-opus-4-8`, vision + structured output. |
 | **Parse Claude** | Code | See [parse-claude-node](/project/parse-claude-node.md) — score, sort, render HTML. |

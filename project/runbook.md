@@ -35,6 +35,8 @@ then **Publish** to activate. See [build-request-node](/project/build-request-no
 | Images blank in Gmail | raw IG/TikTok CDN hotlink block | use the [wsrv.nl proxy](/tech/wsrv-image-proxy.md) URL |
 | Titles start with "Először" / no accents | prompt anchored on negative examples / ASCII | accented prompt, positive examples only |
 | "This email was sent automatically with n8n" footer | Gmail attribution default on | Gmail node → Options → **Append n8n Attribution** = off |
+| Repeated posts | URL-format mismatch defeated dedup | `canon()` normalizes both sides ([dedup-datatable](/project/dedup-datatable.md)); reposts with different URLs are a known gap |
+| Too few / fun items | analyzing only top-by-engagement; loose filter | first-time-signal ranking + 30 analyzed + strict exclusion ([decisions](/project/decisions.md)) |
 | No email | 0 picks after dedup/selection | expected when nothing qualifies; check **Has picks?** |
 
 ## Cost

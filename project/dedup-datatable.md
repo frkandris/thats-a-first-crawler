@@ -23,7 +23,9 @@ Deduplication uses an [n8n](/tech/n8n.md) **Data Table** named `thats_a_first_se
 
 - **Get sent** (Data Table, Return All) reads every row on a parallel branch from Config;
   [build-request-node](/project/build-request-node.md) references it as `$('Get sent')` and drops any
-  candidate whose stripped URL is already present.
+  candidate whose **canonicalized** URL is already present. Canonicalization (`canon()`: lowercase, strip
+  query/fragment, unify Instagram `reel`/`tv` → `p`, drop trailing slash) makes dedup robust to URL-format
+  differences (e.g. the same post scraped once as `/reel/…` and once as `/p/…`).
 - **Insert row** appends one row per pick after the email is sent (fed by **Split picks**).
 
 ## Behavior
