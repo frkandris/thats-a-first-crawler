@@ -44,7 +44,7 @@ Health-check periodically:
 ## Ground-truth invariants (guard against drift)
 
 - Model: `claude-opus-4-8` (vision).
-- Schedule: **daily 06:00** Europe/Berlin (node still *labeled* "Every day 07:00").
+- Schedule: **daily 06:00** Europe/Berlin (Schedule node "Every day 06:00").
 - Recipient **and** sender: `andris@strt.hu`.
 - Claude vision images must be **base64**, never URL (robots.txt).
 - Secrets (Apify token, Anthropic key) are never printed; the human pastes them into n8n.

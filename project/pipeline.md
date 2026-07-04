@@ -21,7 +21,7 @@ Schedule (06:00) → Config ─┬─► Apify Instagram ─► Apify TikTok ─
 
 | Node | Type | Role |
 |---|---|---|
-| **Every day 06:00** | Schedule Trigger | Fires daily 06:00 (node label still says 07:00). |
+| **Every day 06:00** | Schedule Trigger | Fires daily 06:00 Europe/Berlin. |
 | **Config** | Set | `recipient`, `subjectPrefix`, `runDate`, `lookbackDays=7`. |
 | **Apify - Instagram** | HTTP Request | `apify~instagram-hashtag-scraper` run-sync; `Execute Once`, `memory=4096`. |
 | **Apify - TikTok** | HTTP Request | `clockworks~tiktok-scraper` run-sync; `Execute Once`, `memory=4096`. |

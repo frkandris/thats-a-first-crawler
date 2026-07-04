@@ -44,5 +44,4 @@ Considered caching vision results per URL to avoid re-analyzing recurring candid
 **declined** it (2026-07-04). Do not build it; see [dedup-datatable](/project/dedup-datatable.md).
 
 ## Schedule 06:00
-Changed from 07:00 to **06:00** on request. The Schedule node is still *labeled* "Every day 07:00";
-its Trigger-at-Hour is 6am. Rename the node label if the mismatch is confusing.
+Changed from 07:00 to **06:00** on request; the Schedule node was renamed to "Every day 06:00" to match.

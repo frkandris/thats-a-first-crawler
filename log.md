@@ -17,3 +17,6 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   Claude image inputs from URL to base64 (robots.txt); wsrv.nl image proxy adopted; vision-based
   ranking implemented; n8n attribution footer removed; workflow **published**; schedule changed
   **07:00 → 06:00**; "Save successful production executions" enabled.
+- **Ingest** — Repo pushed to GitHub (`frkandris/thats-a-first-crawler`); README polished with badges;
+  Schedule node renamed "Every day 07:00" → "Every day 06:00" and re-published; wiki updated to drop the
+  label-mismatch caveat (lint: consistency).
