@@ -32,8 +32,8 @@ prompt now explicitly excludes ads/promos, paid attractions/entertainment produc
 content, and prefers fewer but genuine picks (down to 0). See [ranking-algorithm](/project/ranking-algorithm.md).
 
 ## Discovery via Apify, not web search
-The original was a ChatGPT agent using web search; that could not target IG/TikTok reliably. We use
-[Apify](/tech/apify.md) hashtag scrapers instead, assembled by one [Claude](/tech/claude-vision-api.md) call.
+Web search could not target Instagram/TikTok reliably, so discovery uses
+[Apify](/tech/apify.md) hashtag scrapers, assembled by one [Claude](/tech/claude-vision-api.md) call.
 
 ## Execute Once on Apify nodes
 The TikTok HTTP node fired **once per input item** (40 IG items → 40 concurrent Apify runs), exhausting

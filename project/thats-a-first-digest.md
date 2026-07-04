@@ -7,15 +7,15 @@ tags: [project, n8n, digest, strt]
 timestamp: 2026-07-04T00:00:00Z
 ---
 
-**That's a First Digest** replicates a ChatGPT "That's a First" agent as an [n8n](/tech/n8n.md)
-workflow. Every morning it discovers recent public social posts where someone tries something for
-the **first time**, ranks them, and emails a compact **Hungarian** digest to `andris@strt.hu`.
+**That's a First Digest** is an [n8n](/tech/n8n.md) workflow. Every morning it discovers recent
+public social posts where someone tries something for the **first time**, ranks them, and emails a
+compact **Hungarian** digest to a configured recipient.
 
 Discovery is done with [Apify](/tech/apify.md) hashtag scrapers (not web search); assembly and
 ranking with one [Claude vision](/tech/claude-vision-api.md) call; delivery via the n8n Gmail node.
 
-- **Owner:** STRT (`office@strt.hu`)
-- **Recipient & sender:** `andris@strt.hu`
+- **Owner:** STRT
+- **Recipient & sender:** configured in the Config node and the Gmail credential
 - **Schedule:** daily **06:00** Europe/Berlin — see [runbook](/project/runbook.md)
 - **Status:** published / active (2026-07-04)
 - **Subject line:** `[that's a first] YYYY-MM-DD`

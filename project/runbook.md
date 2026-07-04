@@ -13,7 +13,7 @@ Operational guide for [That's a First Digest](/project/thats-a-first-digest.md).
 
 - Runs **daily 06:00** Europe/Berlin. It is **Published**; edits require re-publishing to take effect.
 - "Save successful production executions" is **on** → runs appear under the workflow's *Executions* tab.
-- One email per day to `andris@strt.hu`, subject `[that's a first] YYYY-MM-DD`.
+- One email per day to the configured recipient, subject `[that's a first] YYYY-MM-DD`.
 
 ## Manual run / test
 

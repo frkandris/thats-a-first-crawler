@@ -14,7 +14,7 @@ assistant** — the human pastes the token/key value into the field; the assista
 |---|---|---|
 | **Apify header** | HTTP Header Auth | header `Authorization: Bearer <APIFY_TOKEN>` — used by both [Apify](/tech/apify.md) HTTP nodes |
 | **Anthropic** | HTTP Header Auth | header `x-api-key: <ANTHROPIC_KEY>` (plus static `anthropic-version: 2023-06-01`) — used by the Claude node |
-| **Gmail account - andris@strt.hu** | Gmail OAuth2 | existing OAuth credential; sends as `andris@strt.hu` |
+| **Gmail account** | Gmail OAuth2 | existing OAuth credential for the sending mailbox |
 
 ## Security notes
 

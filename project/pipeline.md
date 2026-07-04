@@ -29,7 +29,7 @@ Schedule (06:00) → Config ─┬─► Apify Instagram ─► Apify TikTok ─
 | **Claude** | HTTP Request | POST `api.anthropic.com/v1/messages`, model `claude-opus-4-8`, vision + structured output. |
 | **Parse Claude** | Code | See [parse-claude-node](/project/parse-claude-node.md) — score, sort, render HTML. |
 | **Has picks?** | IF | `{{ $json.picks.length }} > 0`; false → no email. |
-| **Gmail - send digest** | Gmail | To `andris@strt.hu`, HTML `{{ $json.html }}`; n8n attribution OFF. |
+| **Gmail - send digest** | Gmail | To the configured recipient, HTML `{{ $json.html }}`; n8n attribution OFF. |
 | **Split picks** | Code | One item per pick → dedup rows (`url, platform, creator, activity, sent_date`). |
 | **Insert row** | Data Table | Append picks to [dedup table](/project/dedup-datatable.md). |
 | **Get sent** | Data Table | Read all sent URLs (parallel branch), referenced by Build request. |

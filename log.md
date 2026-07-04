@@ -26,3 +26,5 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   Verified: a run then returned 5 genuine, varied firsts (analog photography, pottery, printmaking,
   foraged-raspberry sorbet). Re-published. Wiki synced across pipeline / build-request-node /
   dedup-datatable / decisions / runbook.
+- **Lint** — Privacy pass: removed the "ChatGPT agent replica" framing and all personal email addresses
+  from the wiki; recipient/sender are now described as "configured in the Config node / Gmail credential".
