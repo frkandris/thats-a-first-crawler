@@ -125,3 +125,16 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   The hashtag statistics themselves worked on the first try (`postsCount` field name confirmed against a
   real response: `#thatsafirst` = 4 094 000). The delta block is still absent by design — the counts
   table only has today's rows, so there is nothing to diff against until tomorrow.
+- **Ingest** — **First real digest sent on DeepSeek** (5 picks: boxing in Montgomery, diving in Sabang,
+  analogue photography in Ireland, golf, fresh pasta near Dublin). `finish_reason: stop`,
+  `truncated: false` — the token fix holds, and the tuned Hungarian prompt survived the migration:
+  accented output, activity-first lines, no names.
+- **Lint** — A third failure, this one self-inflicted: renaming `Parse Claude` → `Parse response` left
+  **Split picks** calling `$('Parse Claude')`. n8n resolves those references by display name at runtime
+  and warns about nothing, so the workflow saved clean and the email went out — but the dedup rows were
+  never written, which would have repeated all five posts the next day. Fixed the reference, backfilled
+  the five rows straight into the Data Table (a re-run would have sent a second email), and swept every
+  Code node for stale references (none left). Recorded as a general n8n trap in
+  [n8n](/tech/n8n.md#renaming) plus two [runbook](/project/runbook.md) rows — including the structural
+  point that the Gmail send sits **upstream** of the dedup write, so a failure there is invisible to the
+  recipient.

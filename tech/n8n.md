@@ -19,6 +19,26 @@ The [pipeline](/project/pipeline.md) is one n8n workflow.
 - **Code nodes** — JavaScript, "Run Once for All Items". Have `this.helpers.httpRequest`, `Buffer`,
   top-level `await` (n8n wraps the body in an async function). Reference other nodes with
   `$('Node Name').all()` / `.first().json`.
+
+## <a id="renaming"></a>Renaming a node breaks `$('...')` references
+
+`$('Node Name')` is resolved **by display name at runtime**. Renaming a node does **not** update the
+string inside other nodes' code, and nothing warns you — the workflow saves and looks healthy. It fails
+only when that node executes, with a confusing message:
+
+```
+Cannot assign to read only property 'name' of object 'Error: Referenced node doesn't exist'
+```
+
+This bit us on 2026-08-07: `Parse Claude` → `Parse response` left `Split picks` pointing at the old
+name, so the digest email went out but the dedup rows were never written.
+
+**Always grep every Code node for `$('<old name>')` after a rename.** One-liner against the API:
+
+```
+$('...') references, checked against the live node list
+→ GET /api/v1/workflows/<id>, regex \$\(\s*['"]([^'"]+)['"]\s*\) over each node's parameters
+```
 - **Data Tables** — lightweight key/value tables; Get (Return All) and Insert (Map Automatically).
   Two are used: [dedup](/project/dedup-datatable.md) and
   [hashtag counts](/project/hashtag-counts-datatable.md).
