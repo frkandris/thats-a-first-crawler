@@ -1,0 +1,289 @@
+@import "tailwindcss";
+
+/* ——— Design tokenek ———
+   Papírfehér alap, tinta-kék szöveg, kobalt akció, sárga szövegkiemelő.
+   Az aláírás-motívum: a filctollas kiemelés és a kipipálható checkbox. */
+:root {
+  --paper: #f7f7f3;
+  --ink: #1b2430;
+  --cobalt: #2743d6;
+  --cobalt-deep: #1d33a8;
+  --marker: #ffd84d;
+  --muted: #626c78;
+  --line: #e0dfd6;
+  --card: #fffffb;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+a {
+  color: var(--cobalt);
+}
+a:hover {
+  text-decoration: underline;
+}
+
+::selection {
+  background: var(--marker);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--cobalt);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ——— Szövegkiemelő (az aláírás-elem) ——— */
+.hl {
+  position: relative;
+  white-space: nowrap;
+  z-index: 0;
+}
+.hl::before {
+  content: "";
+  position: absolute;
+  inset: 8% -0.12em -2% -0.12em;
+  background: var(--marker);
+  transform: skew(-8deg) rotate(-0.6deg);
+  z-index: -1;
+}
+
+/* ——— Rács és szekciók ——— */
+.wrap {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.section {
+  padding: 5rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.eyebrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+/* ——— Gombok ——— */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+}
+.btn:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0);
+}
+.btn-primary {
+  background: var(--cobalt);
+  border-color: var(--cobalt);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--cobalt-deep);
+  border-color: var(--cobalt-deep);
+  color: #fff;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+}
+.btn-ghost:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn-marker {
+  background: var(--marker);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.btn-marker:hover {
+  background: #ffce1f;
+}
+
+/* ——— Checklist / kártya motívum ——— */
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+a.card {
+  color: inherit;
+  display: block;
+}
+a.card:hover {
+  text-decoration: none;
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: transparent;
+  background: #fff;
+  flex-shrink: 0;
+  transition: background 150ms ease, color 150ms ease;
+}
+a.card:hover .checkbox,
+.checkbox.checked {
+  background: var(--marker);
+  color: var(--ink);
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  background: #fff;
+}
+
+.chip {
+  display: inline-block;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  color: var(--ink);
+  background: var(--card);
+}
+.chip:hover {
+  text-decoration: none;
+  border-color: var(--ink);
+}
+.chip.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+/* ——— Naptár-jelvény: a hónap utolsó szerdája ——— */
+.calendar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.calendar-chip .dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: var(--cobalt);
+}
+
+/* ——— Üzenet-előnézet ——— */
+.message-box {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+/* ——— Hero checklist animáció ——— */
+@keyframes tick-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.hero-list li {
+  animation: tick-in 500ms ease backwards;
+}
+.hero-list li:nth-child(1) { animation-delay: 150ms; }
+.hero-list li:nth-child(2) { animation-delay: 300ms; }
+.hero-list li:nth-child(3) { animation-delay: 450ms; }
+.hero-list li:nth-child(4) { animation-delay: 600ms; }
+.hero-list li:nth-child(5) { animation-delay: 750ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-list li {
+    animation: none;
+  }
+  .btn,
+  .card {
+    transition: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ——— Űrlap ——— */
+.input {
+  font-family: var(--font-body), sans-serif;
+  font-size: 1rem;
+  padding: 0.75rem 1.1rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  min-width: 0;
+}
+.input::placeholder {
+  color: var(--muted);
+}

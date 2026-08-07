@@ -1,0 +1,26 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "pdf": "node scripts/generate-pdf.mts"
+  },
+  "dependencies": {
+    "next": "16.2.11",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^26.1.1",
+    "@types/pdfkit": "^0.17.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "pdfkit": "^0.19.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
