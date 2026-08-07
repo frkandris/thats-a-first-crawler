@@ -37,6 +37,7 @@ API "may occasionally return empty content". So the node defends explicitly:
 | Check | Action on failure |
 |---|---|
 | Response content empty / not parseable JSON | Treat as `{picks:[]}` — **Has picks?** stops the run, no email. Never throw. |
+| `finish_reason === 'length'` **and** empty content | Same (zero picks), but the node sets `truncated: true` and passes `finishReason` through, because this is a *budget* failure, not an empty selection. See [deepseek-api](/tech/deepseek-api.md#thinking). |
 | `picks` missing or not an array | Same as above. |
 | `index` not an integer within `0…cands.length-1` | Drop that pick. |
 | `line` missing or empty string | Drop that pick. |

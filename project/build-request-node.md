@@ -47,7 +47,10 @@ JSON Schema. Therefore:
 
 - The system prompt **must contain the word "json"** and a literal example of the target object:
   `{"picks":[{"index":0,"line":"…","csoportos":true,"oktatos":false,"felnott":true}]}`.
-- `max_tokens` is set to **4000** so the object cannot be truncated mid-string.
+- `max_tokens` is set to **16000**. Not for output size — the answer is small — but because
+  `deepseek-v4-pro` thinks by default and **reasoning tokens are drawn from the same budget**. At 4000
+  the first live run spent the entire budget reasoning and returned empty content. See
+  [deepseek-api](/tech/deepseek-api.md#thinking).
 - All validation happens downstream in [parse-response-node](/project/parse-response-node.md).
 
 ## Gotchas

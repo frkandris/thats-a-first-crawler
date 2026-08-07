@@ -111,3 +111,17 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   the model to answer `felnott: true` **when uncertain**, so caption-only extraction makes it almost
   always true, turning its `+20` into a near-constant offset rather than the "more often false" the page
   first claimed. Ordering effectively rests on two bits now; two concrete fallbacks recorded.
+- **Ingest** — First live runs of the migrated workflow, and two real failures worth keeping:
+  1. **Apify 402** — the billing-cycle usage limit was exhausted ($0.000899 left), so the run died at the
+     first Apify call. Not a workflow bug; recorded in [runbook](/project/runbook.md).
+  2. **Thinking tokens ate the answer.** After the Apify limit was lifted the run went green end to end
+     (60 IG + 60 TikTok items, 5 hashtag stats, 30 candidates) but produced **0 picks and no email**.
+     Cause: `deepseek-v4-pro` thinks by default and reasoning tokens come out of `max_tokens` — the call
+     returned `finish_reason: length` with `completion_tokens: 4000`, *all* of it reasoning, and empty
+     content. Fixed by raising `max_tokens` **4000 → 16000**;
+     [parse-response-node](/project/parse-response-node.md) now emits `finishReason` + `truncated` so a
+     budget failure is never again mistaken for an empty selection. Documented at
+     [deepseek-api](/tech/deepseek-api.md#thinking).
+  The hashtag statistics themselves worked on the first try (`postsCount` field name confirmed against a
+  real response: `#thatsafirst` = 4 094 000). The delta block is still absent by design — the counts
+  table only has today's rows, so there is nothing to diff against until tomorrow.

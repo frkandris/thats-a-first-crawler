@@ -55,10 +55,35 @@ Three consequences, all handled in our nodes:
 1. The prompt **must contain the word "json"** and an explicit **example of the desired structure** —
    otherwise the request is rejected or the output drifts. The schema lives in the prompt as a literal
    example, not in a `schema` field.
-2. `max_tokens` must be generous enough that the JSON is not truncated mid-string.
+2. `max_tokens` must be generous enough that the JSON is not truncated mid-string — **and it also has to
+   pay for the thinking tokens**, see below. This is the single biggest trap.
 3. The API **may occasionally return empty content** (acknowledged in DeepSeek's own docs). The parse
    step must treat empty/invalid content as *zero picks*, not as a crash — see
    [parse-response-node](/project/parse-response-node.md).
+
+## <a id="thinking"></a>Thinking mode eats `max_tokens` (learned the hard way)
+
+Both V4 models run in **thinking mode by default**, and reasoning tokens are billed and counted as
+*output* — so they come out of the same `max_tokens` budget as the answer. The first live run
+(2026-08-07) failed exactly this way:
+
+```
+finish_reason: "length"
+completion_tokens: 4000   ← of which reasoning_tokens: 4000
+content: ""               ← nothing left for the answer
+```
+
+The request looked successful (HTTP 200, valid response object) and produced **zero picks** silently.
+`max_tokens` is now **16000**, which leaves ample room after reasoning; at one call a day the extra
+output tokens cost fractions of a cent.
+
+Thinking can also be steered explicitly with `thinking: {"type": "enabled"}` and
+`reasoning_effort: "high"`. We leave the defaults: the selection task benefits from reasoning, and the
+budget is no longer the constraint.
+
+**Diagnosing it:** `finish_reason === 'length'` together with empty content is the signature.
+[parse-response-node](/project/parse-response-node.md) now emits `finishReason` and a `truncated` flag so
+this is distinguishable from a genuinely empty selection.
 
 Because nothing is enforced server-side, [parse-response-node](/project/parse-response-node.md) **validates
 and coerces every field** (index bounds, booleans, enum values) before scoring.
