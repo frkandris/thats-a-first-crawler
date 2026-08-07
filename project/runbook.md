@@ -21,6 +21,9 @@ Open the workflow in [n8n](/tech/n8n.md) → **Execute workflow**. A full run is
 (Apify scrape + hashtag stats + one text-only [DeepSeek](/tech/deepseek-api.md) call). It got noticeably
 faster on 2026-08-07: the ~15 image downloads and the vision call are gone. Check the new email in Gmail.
 
+**Publishing matters:** writing the workflow over the REST API saves it, but the scheduled 06:00 run uses
+the **published** version. After any API-side change, hit **Publish** in the editor.
+
 **Testing the hashtag delta:** the block needs at least two runs on different dates to show anything —
 the first run only seeds [the counts table](/project/hashtag-counts-datatable.md) and the block is
 omitted. To verify sooner, insert a row manually with a `checked_date` of yesterday.
@@ -40,6 +43,7 @@ then **Publish** to activate. See [build-request-node](/project/build-request-no
 | Picks have wrong/missing fields | no server-side schema in DeepSeek's JSON mode | validation/coercion in [parse-response-node](/project/parse-response-node.md) handles it; tighten the prompt example if it persists |
 | Hashtag block missing from the email | first run, or no comparable previous row | expected — it needs a second run on a later date ([hashtag-counts-datatable](/project/hashtag-counts-datatable.md)) |
 | Hashtag deltas absurdly large after downtime | delta spans several days | by design; the block prints `(N nap alatt)` |
+| Any Apify node: **402** "Payment required … you will exceed your remaining usage of $X" | The Apify **usage limit** for the billing cycle is reached (X is what is left, often fractions of a cent). Not a workflow bug — the run dies at the first Apify call and nothing downstream executes. | Check [console.apify.com/billing](https://console.apify.com/billing/subscription): raise the cap, or wait for the cycle to roll over. Observed 2026-08-07 with $0.000899 left. |
 | TikTok "Payment required / 16384MB" | Apify node ran once per input item | `Execute Once` on all Apify nodes; `memory=4096`; ensure paid plan credit |
 | Images blank in Gmail | raw IG/TikTok CDN hotlink block | use the [wsrv.nl proxy](/tech/wsrv-image-proxy.md) URL |
 | Titles start with "Először" / no accents | prompt anchored on negative examples / ASCII | accented prompt, positive examples only |
