@@ -98,3 +98,16 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
 - **Lint** — Full pass after the migration: no page still references the Anthropic call, all indexes
   updated, the `#images` decision marked **superseded** rather than deleted, timestamps refreshed on
   every page whose subject changed, bundle-relative links verified.
+- **Ingest** — **The migration was applied to the live n8n workflow** over the public REST API, not just
+  documented. Created the `thats_a_first_hashtag_counts` Data Table; rewrote the workflow to 16 nodes:
+  `Claude` → `DeepSeek` (new URL, `content-type` only, `DeepSeek header` credential), `Parse Claude` →
+  `Parse response`, new `Apify - Hashtag stats` / `Get counts` / `Split counts` / `Insert count row`,
+  and `hashtags[]` added to Config. The counts branch hangs off **Build request**, so it bypasses
+  `Has picks?` as required. The original workflow JSON is backed up before the change.
+  The workflow was left **deactivated** on purpose: the DeepSeek credential holds a placeholder value
+  until the human pastes the rotated key, and an active workflow would have failed the 06:00 run.
+- **Lint** — Correction to [ranking-algorithm](/project/ranking-algorithm.md) after reading the *actual*
+  production prompt (it was not in the repo — the wiki had described it second-hand). The prompt tells
+  the model to answer `felnott: true` **when uncertain**, so caption-only extraction makes it almost
+  always true, turning its `+20` into a near-constant offset rather than the "more often false" the page
+  first claimed. Ordering effectively rests on two bits now; two concrete fallbacks recorded.

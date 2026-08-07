@@ -33,10 +33,10 @@ Schedule (06:00) → Config ─┬─► Apify Instagram ─► Apify TikTok ─
 | Node | Type | Role |
 |---|---|---|
 | **Every day 06:00** | Schedule Trigger | Fires daily 06:00 Europe/Berlin. |
-| **Config** | Set | `recipient`, `lookbackDays=30`, `hashtags[]`. |
+| **Config** | Set | `recipient`, `lookbackDays=30`, `hashtags[]` (the five tracked tags, read by Build request). |
 | **Apify - Instagram** | HTTP Request | `apify~instagram-hashtag-scraper` run-sync; `Execute Once`, `memory=4096`, `resultsLimit=12`. |
 | **Apify - TikTok** | HTTP Request | `clockworks~tiktok-scraper` run-sync; `Execute Once`, `memory=4096`, `resultsPerPage=12`. |
-| **Apify - Hashtag stats** | HTTP Request | `apify~instagram-hashtag-analytics-scraper` run-sync; `Execute Once`; returns `postsCount` per hashtag. |
+| **Apify - Hashtag stats** | HTTP Request | `apify~instagram-hashtag-analytics-scraper` run-sync; `Execute Once`; `includeLatestPosts`/`includeTopPosts` **false** (only `postsCount` is needed — cheaper and faster). |
 | **Build request** | Code | See [build-request-node](/project/build-request-node.md). |
 | **DeepSeek** | HTTP Request | POST `api.deepseek.com/chat/completions`, model `deepseek-v4-pro`, **text-only**, JSON mode. |
 | **Parse response** | Code | See [parse-response-node](/project/parse-response-node.md) — validate, score, sort, render HTML. |

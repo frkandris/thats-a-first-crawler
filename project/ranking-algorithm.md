@@ -43,13 +43,17 @@ Two parameters were removed with the vision call ([decisions](/project/decisions
 | `kepTipus` (`csoport`/`egy`/`tevekenyseg`/`nincs`) | +8 / +4 / 0 | Derivable only from the image. |
 | `ratirtSzoveg` (text burned onto the image) | −10 | Derivable only from the image. |
 
-`felnott` used to be judged from image **and** text; it is now caption-only and therefore less reliable —
-expect it to be `false` more often, since many captions simply do not say.
+`felnott` used to be judged from image **and** text; it is now caption-only. The prompt instructs the
+model to answer **`true` when uncertain**, and captions rarely state age — so in practice `felnott` is
+`true` for nearly every pick, which makes its `+20` close to a constant offset that **does not
+differentiate**. Effectively the ordering now rests on two bits: `csoportos` and `csoportos && oktatos`.
 
-**Accepted consequence:** the score now takes only four distinct values (0, 20, 100, 120, 170), so ties
-are common and **engagement decides the order much more often than before**. The user chose this over
-inventing replacement caption heuristics (2026-08-07). If the ordering turns out too flat in practice,
-the fallback discussed was a caption-quality signal (bait penalty / descriptive-caption bonus).
+**Accepted consequence:** the score takes five nominal values (0, 20, 100, 120, 170) but realistically
+two or three, so ties are frequent and **engagement decides the order much more often than before**.
+The user chose this over inventing replacement caption heuristics (2026-08-07). If the ordering turns
+out too flat in practice, two fallbacks are available, in order of effort: change the `felnott` prompt
+rule to "false when uncertain" (one line, restores a real third bit), or add a caption-quality signal
+(bait penalty / descriptive-caption bonus).
 
 The 2026-07-04 validation example (a Hajj group photo ranking #1, a solo Waymo ride with a text overlay
 ranking last) no longer applies as written: the overlay penalty that pushed the Waymo item to the back
