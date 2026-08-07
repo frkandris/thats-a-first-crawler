@@ -4,7 +4,7 @@ title: LLM Wiki pattern
 description: Karpathy's pattern of an LLM incrementally building and maintaining a persistent interlinked markdown wiki.
 resource: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
 tags: [pattern, llm, wiki, knowledge]
-timestamp: 2026-07-04T00:00:00Z
+timestamp: 2026-08-07T00:00:00Z
 ---
 
 Andrej Karpathy's **LLM Wiki** pattern: instead of RAG re-synthesizing from raw sources on every query,
@@ -41,7 +41,29 @@ and critical thinking.
 Obsidian (live browsing), hybrid search (SQLite FTS5), **git** for version control and audit trails,
 MCP servers for agent integration.
 
+## Page discipline (from the bootstrap prompt)
+
+Karpathy's gist describes *what* the pattern is; the `kondfox/ai-utils` **bootstrap prompt** adds the
+operational discipline that keeps a wiki from rotting into padding. Adopted here on 2026-08-07:
+
+- **One concept per page**, roughly **200 lines maximum**. If a page outgrows that, split it — this is
+  what `nodes/` is reserved for in [CLAUDE.md](/CLAUDE.md).
+- **Answer first, sources second.** The top of a page states the fact; provenance follows.
+- **Provenance is mandatory for non-obvious claims** — `file:line`, commit SHA, PR number, or a dated
+  vendor-doc URL. A claim nobody can re-check is a claim nobody can trust later.
+- **Dates are `YYYY-MM-DD`**, always absolute, never "last week".
+- **Conservative bias: a smaller true wiki beats a padded one.** Do not write a page to look thorough.
+- **Wiki updates ship with the change that caused them** — same commit, not a later cleanup pass.
+- **The schema may evolve, but only explicitly and rarely.**
+
+That prompt also sequences a *from-scratch* bootstrap (investigate the project → scaffold `CLAUDE.md` →
+parallel research tasks → wire into the root instruction file → optional CI capture). This repo is past
+that stage: it was bootstrapped on 2026-07-04 and is maintained through the three operations instead.
+Its one structural difference is link syntax — it uses Obsidian-style `[[wiki-links]]`, while this bundle
+uses [OKF](/format/okf.md) bundle-relative markdown links. We keep OKF.
+
 # Citations
 
 - Gist: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+- Bootstrap prompt: https://github.com/kondfox/ai-utils/blob/main/seeds/llm-wiki-seed-prompt.md (read 2026-08-07).
 - Format used here: [OKF](/format/okf.md).

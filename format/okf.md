@@ -52,6 +52,10 @@ unknown types/keys, broken links, and absent index files.
 
 # Examples
 
+> **Lint note:** the paths below (`tables/orders.md`, `path/to/concept.md`, …) are **illustrations from
+> the spec**, not pages of this bundle. A link checker will report them as missing; that is expected and
+> must not be "fixed". Every other bundle-relative link in this repo is real.
+
 ```yaml
 # datasets/sales.md
 ---

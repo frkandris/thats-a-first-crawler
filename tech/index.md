@@ -1,8 +1,16 @@
 # tech/
 
-Reusable knowledge about the tools the digest is built on. Parent: [/index.md](/index.md).
+Reusable knowledge about the tools the digest and the website are built on.
+Parent: [/index.md](/index.md).
 
+## Pipeline stack
 - [n8n](/tech/n8n.md) — automation platform; Code nodes, Data Tables, publish/schedule.
-- [apify](/tech/apify.md) — IG & TikTok hashtag scrapers, run-sync API, plan limits.
-- [claude-vision-api](/tech/claude-vision-api.md) — Messages API, base64 images, structured output.
+- [apify](/tech/apify.md) — IG & TikTok scrapers, hashtag analytics actor, run-sync API, plan limits.
+- [deepseek-api](/tech/deepseek-api.md) — chat API, JSON mode without a schema, models and pricing.
 - [wsrv-image-proxy](/tech/wsrv-image-proxy.md) — makes CDN images render in email.
+
+## Website stack
+- [nextjs](/tech/nextjs.md) — Next.js 16 App Router and the Next-16-specific traps.
+- [node-sqlite](/tech/node-sqlite.md) — built-in `node:sqlite`, connection singleton, dev migrations.
+- [newsletter-delivery](/tech/newsletter-delivery.md) — Substack has no API; publisher adapters.
+- [pdfkit](/tech/pdfkit.md) — PDF lead magnet and the `ő`/`ű` font requirement.

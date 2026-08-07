@@ -4,16 +4,51 @@ title: Design decisions
 description: Why the system is built the way it is — the non-obvious choices and what forced them.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [decisions, adr, rationale]
-timestamp: 2026-07-04T00:00:00Z
+timestamp: 2026-08-07T00:00:00Z
 ---
 
 Non-obvious choices, newest context on top. Each is a small ADR.
+
+## <a id="deepseek"></a>DeepSeek chat instead of Claude vision (2026-08-07)
+The user moved the workflow to the **DeepSeek API** and dropped image analysis: *"nem érdekel a
+képfeldolgozás már, azt kiszedheted belőle, csak a chat"*. Consequences, all accepted:
+
+- **Model:** `deepseek-v4-pro` at `api.deepseek.com/chat/completions` — see [deepseek-api](/tech/deepseek-api.md).
+  Chosen over `deepseek-v4-flash` because the task is a Hungarian judgement call and at one call per day
+  the difference is under $0.05/month.
+- **No JSON Schema.** DeepSeek offers only `response_format: {"type":"json_object"}`, so the shape moved
+  into the prompt as a literal example and validation moved into
+  [parse-response-node](/project/parse-response-node.md). This is a real downgrade from Anthropic's
+  enforced `output_config.format` — the model *can* return the wrong shape now, so the code must assume it will.
+- **Two ranking parameters died** with the images (`kepTipus`, `ratirtSzoveg`). The user chose to simply
+  drop them rather than invent caption-based replacements, accepting flatter ordering and more
+  engagement-decided ties. See [ranking-algorithm](/project/ranking-algorithm.md).
+- **Cheaper and faster:** the model cost fell from ~$8/month to ~$0.09/month and a run lost the ~15 image
+  downloads. See [runbook](/project/runbook.md).
+- **Images stay in the email.** Only the *model* stopped seeing them; the
+  [wsrv proxy](/tech/wsrv-image-proxy.md) is untouched.
+
+## <a id="hashtag-delta"></a>Hashtag delta from a stored daily total (2026-08-07)
+The user asked for a block showing how many new posts appeared per hashtag since yesterday. The obvious
+approach — counting fresh posts in what we already scrape — **cannot work**: we deliberately fetch only
+12 posts per hashtag, so any count would cap at 12 and understate the truth.
+
+Two alternatives were put to the user: raising the scrape limit (accurate, but ~$25–80/month, breaking
+the ~$10 budget) or a stored daily total. The user chose the **stored total**. The main scrapers turned
+out to expose no hashtag-level aggregate at all, so a third Apify node was added
+(`apify~instagram-hashtag-analytics-scraper`, `postsCount`, ~$0.21/month) and the difference between
+consecutive days is stored in [hashtag-counts-datatable](/project/hashtag-counts-datatable.md).
+
+The actor's own `postsPerDay` was rejected in favor of our own difference: it is auditable and aligned to
+our 06:00 schedule. **Instagram only** — TikTok has no equivalent total.
 
 ## Apify cost budget (~$10/month)
 Apify's IG/TikTok scrapers are **pay-per-result** (~$0.0023/result IG, ~$0.003/result TikTok; no base
 fee). At 50/hashtag × 5 hashtags × 2 platforms a run cost ~$1.33 → ~$40/mo. Target is **$10/mo**
 (~$0.33/run), so `resultsLimit`/`resultsPerPage` were set to **12/hashtag** (~$0.32/run → ~$9.6/mo).
-This is the Apify cost only; the Claude vision call (up to 30 images/run) is billed separately (~$8/mo).
+This is the post-scraper cost only; the hashtag-analytics node (~$0.21/mo) and the
+[DeepSeek](/tech/deepseek-api.md) call (~$0.09/mo) are billed separately. Before 2026-08-07 the model
+line was the Claude vision call at ~$8/mo. Full breakdown in the [runbook](/project/runbook.md#cost).
 
 ## 30-day window (2026-07-04)
 The 7-day window plus a small result count kept surfacing the same viral posts. Raised the search
@@ -39,17 +74,17 @@ content, and prefers fewer but genuine picks (down to 0). See [ranking-algorithm
 
 ## Discovery via Apify, not web search
 Web search could not target Instagram/TikTok reliably, so discovery uses
-[Apify](/tech/apify.md) hashtag scrapers, assembled by one [Claude](/tech/claude-vision-api.md) call.
+[Apify](/tech/apify.md) hashtag scrapers, assembled by one [DeepSeek](/tech/deepseek-api.md) call.
 
 ## Execute Once on Apify nodes
 The TikTok HTTP node fired **once per input item** (40 IG items → 40 concurrent Apify runs), exhausting
 16 GB memory and ~$4 of credit. Fixed with `Execute Once` + `memory=4096` on both Apify nodes.
 
-## <a id="images"></a>Claude images: base64, not URL
-Passing `source.type:"url"` (even via the wsrv proxy) returns **400 "This URL is disallowed by the
-website's robots.txt file."** Anthropic's fetcher honors robots.txt. So
-[build-request-node](/project/build-request-node.md) downloads each image and sends
-`source.type:"base64"`.
+## <a id="images"></a>Claude images: base64, not URL — **superseded 2026-08-07**
+*Historical.* Passing `source.type:"url"` (even via the wsrv proxy) returned **400 "This URL is disallowed
+by the website's robots.txt file."** — Anthropic's fetcher honors robots.txt — so the build node downloaded
+each image and sent `source.type:"base64"`. Obsolete since the [move to text-only DeepSeek](#deepseek):
+no images are sent to any model. Kept because it explains why the code once looked the way it did.
 
 ## wsrv.nl proxy for email display
 Raw Instagram `displayUrl` does not render in Gmail (hotlink protection / Google image proxy).
@@ -57,8 +92,10 @@ Routing through [wsrv.nl](/tech/wsrv-image-proxy.md) (`?url=…&w=360&output=jpg
 TikTok images render **and** gives consistent sizing.
 
 ## Deterministic ranking in code
-The user wanted explicit, tunable ordering. Claude extracts parameters (from text **and** image); the
-[score and sort](/project/ranking-algorithm.md) are computed in code, so weights are auditable and stable.
+The user wanted explicit, tunable ordering. The model extracts parameters (from the caption; originally
+from text **and** image); the [score and sort](/project/ranking-algorithm.md) are computed in code, so
+weights are auditable and stable. This choice is what made the vision removal cheap — only the parameter
+*sources* changed, not the scoring machinery.
 
 ## Prompt language & examples
 Accent-less prompts produced accent-less output, and negative "Először" examples got copied verbatim.

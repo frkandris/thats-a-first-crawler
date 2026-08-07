@@ -4,7 +4,7 @@ title: n8n
 description: The self-hosted workflow-automation platform that runs the digest.
 resource: https://<n8n-host>
 tags: [n8n, automation, platform]
-timestamp: 2026-07-04T00:00:00Z
+timestamp: 2026-08-07T00:00:00Z
 ---
 
 [n8n](https://n8n.io) is a node-based workflow-automation tool. STRT runs a self-hosted instance.
@@ -13,14 +13,15 @@ The [pipeline](/project/pipeline.md) is one n8n workflow.
 ## Concepts used here
 
 - **Trigger nodes** — a Schedule Trigger fires the daily run (interval Days, hour/minute).
-- **HTTP Request nodes** — call Apify and Anthropic; auth via generic credentials
+- **HTTP Request nodes** — call Apify and [DeepSeek](/tech/deepseek-api.md); auth via generic credentials
   ([credentials](/project/credentials.md)). `Execute Once` (Settings tab) runs the node a single time
   regardless of input item count — critical for the [Apify](/tech/apify.md) nodes.
 - **Code nodes** — JavaScript, "Run Once for All Items". Have `this.helpers.httpRequest`, `Buffer`,
   top-level `await` (n8n wraps the body in an async function). Reference other nodes with
   `$('Node Name').all()` / `.first().json`.
 - **Data Tables** — lightweight key/value tables; Get (Return All) and Insert (Map Automatically).
-  Used for [dedup](/project/dedup-datatable.md).
+  Two are used: [dedup](/project/dedup-datatable.md) and
+  [hashtag counts](/project/hashtag-counts-datatable.md).
 - **IF nodes** — branch on an expression (`Has picks?`).
 - **Gmail node** — OAuth2; sends HTML mail. Options → "Append n8n Attribution" adds a footer (turned off).
 

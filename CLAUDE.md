@@ -15,10 +15,28 @@ This bundle conforms to [OKF v0.1](/format/okf.md):
 
 ## Directory conventions
 
-- `project/` — everything specific to the *That's a First Digest* system.
+- `project/` — everything specific to the *That's a First Digest* system and its website.
 - `nodes/` — (reserved for future) one page per n8n node if the pipeline page grows too large.
-- `tech/` — reusable knowledge about the underlying tools (n8n, Apify, Claude, image proxy).
+- `tech/` — reusable knowledge about the underlying tools (n8n, Apify, DeepSeek, image proxy, and the
+  website stack: Next.js, node:sqlite, newsletter delivery, PDFKit).
 - `format/` — meta: the OKF spec and the LLM-wiki pattern that govern this repo.
+
+## How to write a page
+
+From the [LLM-wiki pattern](/format/llm-wiki-pattern.md); these are binding, not stylistic:
+
+- **One concept per page, ~200 lines max.** Outgrown a page? Split it.
+- **Answer first, sources second.** State the fact at the top; provenance below.
+- **Provenance for every non-obvious claim** — `file:line`, commit SHA, or a dated vendor-doc URL.
+  Vendor facts get the date they were read, because vendor docs change.
+- **Dates are absolute `YYYY-MM-DD`.** Never "recently" or "last week".
+- **A smaller true wiki beats a padded one.** Do not pad a page to look thorough.
+- **Record what was decided *and rejected*, with the reason** — a rejected option that is not written
+  down gets re-proposed every few months.
+- **Supersede, don't silently delete.** When a decision is reversed, mark the old one superseded and say
+  why (see the `#images` entry in [decisions](/project/decisions.md)); delete only pages describing
+  things that no longer exist at all.
+- **Wiki updates ship in the same commit as the change that caused them.**
 
 ## The three operations
 
@@ -43,8 +61,13 @@ Health-check periodically:
 
 ## Ground-truth invariants (guard against drift)
 
-- Model: `claude-opus-4-8` (vision).
+- Model: `deepseek-v4-pro` via `api.deepseek.com/chat/completions`, **text-only** (since 2026-08-07).
+- No images are sent to any model. Image URLs exist only for email rendering (wsrv proxy).
+- DeepSeek has **no JSON Schema** — the shape is a literal example in the prompt, and
+  [parse-response-node](/project/parse-response-node.md) validates every field. Never assume the
+  response matches the shape.
 - Schedule: **daily 06:00** Europe/Berlin (Schedule node "Every day 06:00").
 - Recipient and sender: configured in the Config node and the Gmail credential.
-- Claude vision images must be **base64**, never URL (robots.txt).
-- Secrets (Apify token, Anthropic key) are never printed; the human pastes them into n8n.
+- The hashtag-counts branch must **never** be gated on `Has picks?` — today's totals are written even on
+  no-email days, or the next delta breaks.
+- Secrets (Apify token, DeepSeek key) are never printed; the human pastes them into n8n.

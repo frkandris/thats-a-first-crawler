@@ -4,7 +4,7 @@ title: That's a First Digest
 description: A daily n8n workflow that scrapes Instagram/TikTok and emails a Hungarian digest of people trying something for the first time.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [project, n8n, digest, strt]
-timestamp: 2026-07-04T00:00:00Z
+timestamp: 2026-08-07T00:00:00Z
 ---
 
 **That's a First Digest** is an [n8n](/tech/n8n.md) workflow. Every morning it discovers recent
@@ -12,7 +12,7 @@ public social posts where someone tries something for the **first time**, ranks 
 compact **Hungarian** digest to a configured recipient.
 
 Discovery is done with [Apify](/tech/apify.md) hashtag scrapers (not web search); assembly and
-ranking with one [Claude vision](/tech/claude-vision-api.md) call; delivery via the n8n Gmail node.
+ranking with one text-only [DeepSeek](/tech/deepseek-api.md) call; delivery via the n8n Gmail node.
 
 - **Owner:** STRT
 - **Recipient & sender:** configured in the Config node and the Gmail credential
@@ -25,19 +25,25 @@ ranking with one [Claude vision](/tech/claude-vision-api.md) call; delivery via 
 ## How it works
 
 See [pipeline](/project/pipeline.md) for the full node chain. In short:
-Apify scrapes IG + TikTok → [build-request-node](/project/build-request-node.md) normalizes candidates,
-downloads their images as base64, and assembles a Claude request → Claude selects ≤5 posts and
-extracts ranking parameters from text **and image** → [parse-claude-node](/project/parse-claude-node.md)
-scores, sorts, and renders the [email](/project/email-format.md) → Gmail sends → the picks are written
-to the [dedup table](/project/dedup-datatable.md) so they never repeat.
+Apify scrapes IG + TikTok and reads each hashtag's total post count →
+[build-request-node](/project/build-request-node.md) normalizes candidates, computes the hashtag deltas,
+and assembles a text-only [DeepSeek](/tech/deepseek-api.md) request → the model selects ≤5 posts and
+extracts ranking parameters from the captions →
+[parse-response-node](/project/parse-response-node.md) validates, scores, sorts, and renders the
+[email](/project/email-format.md) → Gmail sends → the picks are written to the
+[dedup table](/project/dedup-datatable.md) so they never repeat, and today's hashtag totals to the
+[counts table](/project/hashtag-counts-datatable.md) so tomorrow's delta works.
 
 ## Requirements captured
 
 - Genuine first-time experiences only; up to 5 per day; skip if fewer good ones.
 - Minimalist email: no loud header, not bold, numbered items, hashtags under each item, small image.
+- A closing block with the **per-hashtag growth since the previous run** (Instagram) — see
+  [email-format](/project/email-format.md#hashtag-delta).
 - Activity-first descriptions (never start with "Először"/"first"); accented Hungarian; no people's names.
 - Ranking preferences realized in [ranking-algorithm](/project/ranking-algorithm.md).
 
 ## See also
 
-[decisions](/project/decisions.md) · [credentials](/project/credentials.md) · [runbook](/project/runbook.md)
+[website](/project/website.md) (the product layer this digest feeds) · [decisions](/project/decisions.md) ·
+[credentials](/project/credentials.md) · [runbook](/project/runbook.md)

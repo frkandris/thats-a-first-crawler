@@ -4,7 +4,7 @@ title: wsrv.nl image proxy
 description: A free image CDN/proxy used to make Instagram/TikTok CDN images render in email.
 resource: https://wsrv.nl
 tags: [images, proxy, cdn, email]
-timestamp: 2026-07-04T00:00:00Z
+timestamp: 2026-08-07T00:00:00Z
 ---
 
 [wsrv.nl](https://wsrv.nl) (formerly images.weserv.nl) fetches a source image server-side and re-serves
@@ -25,8 +25,9 @@ https://wsrv.nl/?url=<url-encoded source>&w=360&output=jpg
 - Used as the `imageUrl` in the [email](/project/email-format.md) (displayed at `max-width:180px`).
 - Built in [build-request-node](/project/build-request-node.md)'s `proxy()` helper.
 
-## Caveat
+## Scope
 
-wsrv is used for **email display**. It is **not** a valid image source for
-[Claude vision](/tech/claude-vision-api.md) — Anthropic still refuses it on robots.txt grounds, which is
-why images are downloaded and sent as base64. See [decisions](/project/decisions.md#images).
+wsrv is used for **email display only** — it is the last remaining image concern in the pipeline.
+Since the 2026-08-07 switch to a text-only [DeepSeek](/tech/deepseek-api.md) call, no image is sent to
+any model, so the old base64-download workaround (and the robots.txt problem that forced it) is gone.
+See [decisions](/project/decisions.md#deepseek).
