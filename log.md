@@ -138,3 +138,28 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   [n8n](/tech/n8n.md#renaming) plus two [runbook](/project/runbook.md) rows — including the structural
   point that the Gmail send sits **upstream** of the dedup write, so a failure there is invisible to the
   recipient.
+
+## 2026-08-10
+
+- **Query** — "no email in the mornings". Two separate causes, neither of them the model migration.
+  1. **Apify monthly hard limit.** The 08-09 and 08-10 scheduled runs both died at `Apify - Instagram`
+     with **403 / `Monthly usage hard limit exceeded`**; nothing downstream ran, so no digest. The 08-08
+     run had succeeded. Recorded in [runbook](/project/runbook.md). Needs a billing decision from the
+     human — not fixable from here.
+  2. **Dedup had never worked.** Investigating the one successful run exposed it.
+- **Lint** — **Correction: the wiki's "robust dedup" claim was false.** `Get sent` hung off Config as a
+  *parallel* branch, and n8n with `executionOrder: v1` runs a parallel branch **after** the main chain —
+  measured at +239 678 ms versus Build request at +135 656 ms. So `$('Get sent')` threw, the surrounding
+  `try/catch` turned it into an empty set, and every candidate passed the filter. The node showed a
+  healthy item count in the UI, so nothing looked wrong. Evidence: the dedup table holds **183 rows but
+  only 147 unique canonical URLs** — 21 posts emailed more than once, one TikTok five times between
+  07-17 and 08-03, and the 08-08 digest repeated **4 of its 5 picks** from 08-07. This predates the
+  DeepSeek migration by weeks.
+  **Fixed:** `Get sent` and `Get counts` are now wired **in line** (`Config → Get sent → Get counts →
+  Apify - Instagram → …`) with `Execute Once`; the swallowing `try/catch` is replaced by a named thrown
+  error; Build request emits `sentRowCount`/`countsRowCount` so an empty read can never hide again.
+  Generalised in [n8n](/tech/n8n.md#branch-order) and promoted to a ground-truth invariant in
+  [CLAUDE.md](/CLAUDE.md). Also explains why the hashtag delta was `null` on 08-08 despite 08-07 rows
+  existing — same root cause, same fix.
+  **Not yet verified against a live run:** the Apify limit blocks execution, so the fix is written and
+  wired but unproven.

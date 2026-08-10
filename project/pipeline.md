@@ -7,28 +7,24 @@ tags: [pipeline, n8n, dataflow]
 timestamp: 2026-08-07T00:00:00Z
 ---
 
-The [project](/project/thats-a-first-digest.md) is a single [n8n](/tech/n8n.md) workflow.
-Three branches leave **Config**: the main scrape/assemble/send chain, and parallel reads of the
-[dedup table](/project/dedup-datatable.md) and the
-[hashtag counts table](/project/hashtag-counts-datatable.md).
+The [project](/project/thats-a-first-digest.md) is a single [n8n](/tech/n8n.md) workflow. It is one
+mostly-linear chain; the only fork is after **Build request**, where the counts branch splits off.
 
 ## Node chain
 
 ```
-Schedule (06:00) → Config ─┬─► Apify Instagram ─► Apify TikTok ─► Apify Hashtag stats ─► Build request
-                           │                                                                  │
-                           │        ┌─────────────────────────────────────────────────────────┤
-                           │        ▼                                                         ▼
-                           │   DeepSeek ─► Parse response ─► Has picks? ─(true)─► Gmail send   Split counts
-                           │                                                        │              │
-                           │                                                        ▼              ▼
-                           │                                                   Split picks    Insert count row
-                           │                                                        │
-                           │                                                        ▼
-                           │                                                   Insert row
-                           ├─► Get sent    (parallel; read by Build request via $('Get sent'))
-                           └─► Get counts  (parallel; read by Build request via $('Get counts'))
+Schedule (06:00) → Config → Get sent → Get counts → Apify Instagram → Apify TikTok
+   → Apify Hashtag stats → Build request ─┬─► DeepSeek ─► Parse response ─► Has picks?
+                                          │                                    │(true)
+                                          │                                    ▼
+                                          │                              Gmail send ─► Split picks ─► Insert row
+                                          └─► Split counts ─► Insert count row
 ```
+
+**The two table reads are in line, on purpose.** They used to hang off Config as parallel branches, which
+made them execute at the *end* of the run — after Build request had already tried to read them — and
+[silently killed dedup for weeks](/project/dedup-datatable.md#silent-failure). Any node referenced with
+`$('X')` must be an **ancestor** of the node referencing it. See [n8n](/tech/n8n.md#branch-order).
 
 | Node | Type | Role |
 |---|---|---|
@@ -46,8 +42,8 @@ Schedule (06:00) → Config ─┬─► Apify Instagram ─► Apify TikTok ─
 | **Insert row** | Data Table | Append picks to [dedup table](/project/dedup-datatable.md). |
 | **Split counts** | Code | One item per hashtag → `{hashtag, posts_count, checked_date}`. |
 | **Insert count row** | Data Table | Append today's totals to [hashtag counts](/project/hashtag-counts-datatable.md). |
-| **Get sent** | Data Table | Read all sent URLs (parallel branch), referenced by Build request. |
-| **Get counts** | Data Table | Read all hashtag counts (parallel branch), referenced by Build request. |
+| **Get sent** | Data Table | Read all sent URLs. **In line, `Execute Once`**, ahead of Build request. |
+| **Get counts** | Data Table | Read all hashtag counts. **In line, `Execute Once`**, ahead of Build request. |
 
 ## Why the counts branch bypasses `Has picks?`
 

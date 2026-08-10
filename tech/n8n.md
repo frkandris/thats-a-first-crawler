@@ -20,6 +20,30 @@ The [pipeline](/project/pipeline.md) is one n8n workflow.
   top-level `await` (n8n wraps the body in an async function). Reference other nodes with
   `$('Node Name').all()` / `.first().json`.
 
+## <a id="branch-order"></a>A parallel branch runs at the END of the run
+
+This one cost weeks of silent breakage. With `executionOrder: v1`, n8n walks the **main chain to
+completion first**, then comes back for the other branches of a fork. A "read a table in parallel" node
+therefore executes **last**, not alongside.
+
+Measured on a real run (2026-08-08), offsets from the first node:
+
+```
++     2ms  Apify - Instagram
++135656ms  Build request        ← calls $('Get sent') / $('Get counts') here
++239678ms  Get sent             ← but they only run now
++239702ms  Get counts
+```
+
+`$('Node')` on a node that has **not executed yet throws**. Wrapped in `try {} catch {}` — as our code
+was — it silently yields an empty list, so a filter built on it passes everything through and *looks*
+fine. Dedup was dead for weeks this way; see [dedup-datatable](/project/dedup-datatable.md).
+
+**Rule: if a Code node calls `$('X')`, then X must be an ancestor in the same chain.** Wire readers
+**in line** ahead of the consumer rather than on a parallel branch, and set `Execute Once` on them so an
+upstream node emitting many items does not multiply the reads. Never `try/catch` a `$('...')` call into
+a default value — let it throw, or throw a clearer error.
+
 ## <a id="renaming"></a>Renaming a node breaks `$('...')` references
 
 `$('Node Name')` is resolved **by display name at runtime**. Renaming a node does **not** update the

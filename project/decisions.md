@@ -54,12 +54,25 @@ line was the Claude vision call at ~$8/mo. Full breakdown in the [runbook](/proj
 The 7-day window plus a small result count kept surfacing the same viral posts. Raised the search
 window to **30 days** for a fresher, more varied pool (result count later tuned down for cost, above).
 
+## <a id="dedup-order"></a>Dedup readers must be in line, not parallel (2026-08-10)
+The `canon()` work below was correct but **inert**: `Get sent` sat on a parallel branch, which n8n runs
+*after* the main chain, so `$('Get sent')` threw inside Build request and a `try/catch` turned that into
+an empty set. Every candidate passed the filter. Discovered only when the 2026-08-08 digest repeated 4 of
+its 5 picks; the table then showed 21 URLs sent more than once, going back to mid-July.
+
+Two lessons, both now enforced: **a `$('X')` reference requires X to be an ancestor**, and **never
+`try/catch` a `$('...')` call into a default** — a swallowed wiring error is indistinguishable from
+legitimately empty data. Build request also reports `sentRowCount`/`countsRowCount` now, so the input
+size is visible in every run. See [dedup-datatable](/project/dedup-datatable.md#silent-failure) and
+[n8n](/tech/n8n.md#branch-order).
+
 ## Robust URL dedup (canon)
 Repeats slipped through because the same post can be scraped in different URL formats
-(`/reel/ABC` vs `/p/ABC`, trailing slash, query string). Dedup now compares a **canonicalized** URL on
-both sides (`canon()`), so format differences no longer defeat it. See
-[dedup-datatable](/project/dedup-datatable.md). Known limitation: *different* posts about the same viral
-event (reposts) share no URL and are not deduped — content-level dedup was considered and not built.
+(`/reel/ABC` vs `/p/ABC`, trailing slash, query string). Dedup compares a **canonicalized** URL on
+both sides (`canon()`), so format differences do not defeat it. See
+[dedup-datatable](/project/dedup-datatable.md). This logic was fine; it just never received data until
+the wiring fix above. Known limitation: *different* posts about the same viral event (reposts) share no
+URL and are not deduped — content-level dedup was considered and not built.
 
 ## Prioritize genuine first-time signals for analysis
 Only the top candidates by engagement were vision-analyzed, and high-engagement `#thatsafirst` posts skew

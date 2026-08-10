@@ -21,15 +21,36 @@ Deduplication uses an [n8n](/tech/n8n.md) **Data Table** named `thats_a_first_se
 
 ## Read / write
 
-- **Get sent** (Data Table, Return All) reads every row on a parallel branch from Config;
-  [build-request-node](/project/build-request-node.md) references it as `$('Get sent')` and drops any
+- **Get sent** (Data Table, Return All, `Execute Once`) is wired **in line** — `Config → Get sent →
+  Get counts → Apify - Instagram → …` — so it has definitely executed by the time
+  [build-request-node](/project/build-request-node.md) references it as `$('Get sent')`. It drops any
   candidate whose **canonicalized** URL is already present. Canonicalization (`canon()`: lowercase, strip
   query/fragment, unify Instagram `reel`/`tv` → `p`, drop trailing slash) makes dedup robust to URL-format
   differences (e.g. the same post scraped once as `/reel/…` and once as `/p/…`).
 - **Insert row** appends one row per pick after the email is sent (fed by **Split picks**).
 
+## <a id="silent-failure"></a>It was silently broken until 2026-08-10
+
+**Get sent used to hang off Config as a parallel branch**, and n8n runs a parallel branch at the *end* of
+the execution — after Build request had already asked for it. `$('Get sent')` therefore threw, the
+`try/catch` around it swallowed the error, and the filter ran against an **empty set**: every candidate
+passed. See [n8n](/tech/n8n.md#branch-order).
+
+Nothing surfaced this. The node showed a healthy item count in the UI (it *did* run, just too late), and
+the wiki claimed dedup was robust because `canon()` was reviewed as correct — it is; it simply never
+received data.
+
+Evidence found in the table itself: **183 rows but only 147 unique canonical URLs**, i.e. 21 posts were
+emailed more than once — one TikTok five times (2026-07-17, 07-21, 07-25, 07-29, 08-03), one three days
+running (07-17/18/19). The 2026-08-08 digest repeated **4 of its 5 picks** from 08-07.
+
+Fixed by wiring the readers in line and replacing the `try/catch` with a thrown error naming the cause.
+Build request now also returns `sentRowCount` / `countsRowCount` so an empty read is visible in the run
+data instead of being invisible.
+
 ## Behavior
 
-Because filtering happens before selection, a post that was already emailed can never be picked again.
-Candidates that were analyzed but not picked are **not** stored (there is no image-analysis cache — the
-user declined one on 2026-07-04; see [decisions](/project/decisions.md)).
+Because filtering happens before selection, a post that was already emailed can never be picked again —
+**provided Get sent is an ancestor of Build request**. Candidates that were analyzed but not picked are
+**not** stored (there is no image-analysis cache — the user declined one on 2026-07-04; see
+[decisions](/project/decisions.md)).

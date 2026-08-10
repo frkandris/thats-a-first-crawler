@@ -70,4 +70,8 @@ Health-check periodically:
 - Recipient and sender: configured in the Config node and the Gmail credential.
 - The hashtag-counts branch must **never** be gated on `Has picks?` — today's totals are written even on
   no-email days, or the next delta breaks.
+- **Any node referenced as `$('X')` must be an ancestor of the referencing node.** n8n runs parallel
+  branches at the *end* of a run, so a "parallel read" is empty when the main chain asks for it. Never
+  wrap a `$('...')` call in `try/catch` with a default — that hides a wiring bug as legitimate empty
+  data, which is exactly how dedup stayed broken for weeks.
 - Secrets (Apify token, DeepSeek key) are never printed; the human pastes them into n8n.
