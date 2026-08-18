@@ -163,3 +163,46 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   existing — same root cause, same fix.
   **Not yet verified against a live run:** the Apify limit blocks execution, so the fix is written and
   wired but unproven.
+
+## 2026-08-18
+
+- **Ingest** — **Model switch: paid DeepSeek → the Meetapedia free-tier router.** The user asked to reuse
+  the free AI access already built in their `../meetapedia` project. That project exposes its free-tier
+  model router as an **OpenAI-compatible gateway** (`meetapedia.com/v1/chat/completions`,
+  `scraper/web/api.py`), so the digest now sends `model: 'auto'` and the router picks the best free model
+  with daily quota left across Groq / Cerebras / Gemini / Mistral / OpenRouter. New page
+  [meetapedia-router](/tech/meetapedia-router.md); ADR in
+  [decisions](/project/decisions.md#meetapedia-router).
+  Live workflow changes (n8n REST API, then **Publish** in the editor):
+  - **New node `AI - Meetapedia router`** (HTTP Request) between `Build request` and `Parse response`,
+    with `retryOnFail`, `maxTries: 3`, `waitBetweenTries: 5000` — free-tier 429/502 are ordinary states,
+    not outages.
+  - **The `DeepSeek` node was disabled and unwired, not renamed or deleted.** Rollback is one enable plus
+    one connection. Verified against the live JSON that **nothing references either node with `$('…')`**,
+    so the [rename trap](/tech/n8n.md#renaming) does not apply here.
+  - `Build request`: `model: 'deepseek-v4-pro'` → `'auto'`, `max_tokens: 16000` → **8000** (Gemini's free
+    tier caps output at 8192 and rejects a larger ceiling; the budget is still a *reasoning* budget).
+  - `Parse response`: new `jsonSlice()` strips a markdown fence and cuts to the outermost braces before
+    `JSON.parse` — the gateway **silently drops `response_format`** for providers with `json_mode: false`
+    (`meetapedia/scraper/extract.py:805`), so a fenced answer is now a normal outcome rather than a
+    zero-pick day. No-op on a clean `json_object` answer.
+  - New credential **`Meetapedia router header`** (HTTP Header Auth). It was created with a **placeholder
+    value** — the human pastes the real `ROUTER_API_KEY`; the assistant never types secrets.
+  - `Build request`'s output list keeps the router **first** and `Split counts` second, preserving the
+    execution order that the [dedup fix](/project/decisions.md#dedup-order) depends on.
+  - Both patched Code nodes were re-read from the server and `node --check`ed (wrapped in an async IIFE,
+    since top-level `await` is legal only inside n8n's wrapper).
+  - Cost: the model line goes ~$0.09/month → **$0**; [Apify](/tech/apify.md) is now the entire bill.
+    The new cost is *shared quota* with the Meetapedia crawler, visible at `GET /v1/quota`.
+- **Ingest** — [deepseek-api](/tech/deepseek-api.md) marked **superseded**, not deleted: it still
+  documents the disabled standby node, and its thinking-token trap applies to the free reasoning models
+  (`gpt-oss`) as well. Cross-references updated in [pipeline](/project/pipeline.md),
+  [build-request-node](/project/build-request-node.md),
+  [parse-response-node](/project/parse-response-node.md), [credentials](/project/credentials.md),
+  [runbook](/project/runbook.md) (401/429/502/503 rows + a rollback row),
+  [ranking-algorithm](/project/ranking-algorithm.md), [thats-a-first-digest](/project/thats-a-first-digest.md),
+  [n8n](/tech/n8n.md), the three index pages, the README badges and the
+  [CLAUDE.md](/CLAUDE.md) ground-truth invariants.
+- **Not yet verified against a live run:** the gateway credential holds a placeholder until the human
+  pastes the key, so the switched chain is wired but unproven. Until then the 06:00 run would 401 —
+  see [runbook](/project/runbook.md).

@@ -8,8 +8,9 @@ timestamp: 2026-08-07T00:00:00Z
 ---
 
 Ranking is **deterministic and done in code** ([parse-response-node](/project/parse-response-node.md)), not
-left to the model's judgement. [DeepSeek](/tech/deepseek-api.md) only *extracts parameters* per candidate
-(from the caption); the score and order are computed from them.
+left to the model's judgement. The model only *extracts parameters* per candidate (from the caption); the
+score and order are computed from them. That is also why swapping the model — Claude → DeepSeek → the
+[free-tier router](/tech/meetapedia-router.md) — never changed the ordering rules.
 
 ## Parameters (per pick)
 

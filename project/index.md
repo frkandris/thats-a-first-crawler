@@ -7,10 +7,10 @@ Everything specific to the *That's a First Digest* system. Parent: [/index.md](/
 - [pipeline](/project/pipeline.md) — n8n node chain and data flow.
 - [ranking-algorithm](/project/ranking-algorithm.md) — caption-based deterministic scoring & sort.
 - [email-format](/project/email-format.md) — exact per-item layout + hashtag delta block.
-- [build-request-node](/project/build-request-node.md) — normalize, dedup, hashtag deltas, DeepSeek request.
+- [build-request-node](/project/build-request-node.md) — normalize, dedup, hashtag deltas, model request.
 - [parse-response-node](/project/parse-response-node.md) — validate, score, sort, render HTML.
 - [dedup-datatable](/project/dedup-datatable.md) — sent-URL dedup store.
 - [hashtag-counts-datatable](/project/hashtag-counts-datatable.md) — daily hashtag totals for the delta block.
-- [credentials](/project/credentials.md) — Apify / DeepSeek / Gmail.
+- [credentials](/project/credentials.md) — Apify / router / DeepSeek / Gmail.
 - [runbook](/project/runbook.md) — operate, test, troubleshoot.
 - [decisions](/project/decisions.md) — design rationale / ADRs.

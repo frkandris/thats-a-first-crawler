@@ -1,23 +1,28 @@
 ---
 type: Reference
 title: Credentials
-description: The three credentials the workflow needs and how they are configured in n8n.
+description: The credentials the workflow needs and how they are configured in n8n.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [credentials, security, auth]
-timestamp: 2026-08-07T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 ---
 
-Three credentials, all created by the human in [n8n](/tech/n8n.md). **Secrets are never typed by the
-assistant** — the human pastes the token/key value into the field; the assistant fills everything else.
+Four credentials in [n8n](/tech/n8n.md). **Secrets are never typed by the assistant** — the human pastes
+the token/key value into the field; the assistant fills everything else.
 
 | Credential | Kind | Detail |
 |---|---|---|
 | **Apify header** | HTTP Header Auth | header `Authorization: Bearer <APIFY_TOKEN>` — used by all three [Apify](/tech/apify.md) HTTP nodes |
-| **DeepSeek** | HTTP Header Auth | header `Authorization: Bearer <DEEPSEEK_API_KEY>` — used by the [DeepSeek](/tech/deepseek-api.md) node |
+| **Meetapedia router header** | HTTP Header Auth | header `Authorization: Bearer <ROUTER_API_KEY>` — used by the **AI - Meetapedia router** node ([meetapedia-router](/tech/meetapedia-router.md)) |
+| **DeepSeek header** | HTTP Header Auth | header `Authorization: Bearer <DEEPSEEK_API_KEY>` — used by the disabled [DeepSeek](/tech/deepseek-api.md) standby node; kept for rollback |
 | **Gmail account** | Gmail OAuth2 | existing OAuth credential for the sending mailbox |
 
-The **Anthropic** credential (`x-api-key` + `anthropic-version`) was retired on 2026-08-07 with the model
-switch; delete it in n8n once the DeepSeek node is verified green.
+`ROUTER_API_KEY` is **not a vendor key**: the gateway reads a comma-separated allowlist from its own
+`ROUTER_API_KEY` env var, so the digest gets its own entry and can be revoked alone without touching the
+other consumers. Unset on the gateway side = every request 401s; there is no open mode.
+
+The **Anthropic** credential (`x-api-key` + `anthropic-version`) was retired with the 2026-08-07 model
+switch and is gone from the instance — `GET /api/v1/credentials` no longer lists it (checked 2026-08-18).
 
 ## Security notes
 

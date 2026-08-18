@@ -3,9 +3,9 @@
 ![format: OKF v0.1](https://img.shields.io/badge/format-OKF%20v0.1-2ea44f)
 ![pattern: LLM Wiki](https://img.shields.io/badge/pattern-LLM%20Wiki-8A2BE2)
 ![runs on: n8n](https://img.shields.io/badge/runs%20on-n8n-EA4B71)
-![LLM: DeepSeek V4 Pro](https://img.shields.io/badge/LLM-DeepSeek%20V4%20Pro-4D6BFE)
+![LLM: free-tier router](https://img.shields.io/badge/LLM-free--tier%20router-2ea44f)
 ![status: live daily 06:00](https://img.shields.io/badge/status-live%20daily%2006%3A00-brightgreen)
-![docs: 22 concept pages](https://img.shields.io/badge/docs-22%20concept%20pages-blue)
+![docs: 23 concept pages](https://img.shields.io/badge/docs-23%20concept%20pages-blue)
 
 An **LLM-maintained knowledge base** for STRT's *"That's a First Digest"* project — a daily
 [n8n](/tech/n8n.md) workflow that scrapes Instagram/TikTok and emails a Hungarian digest of people
@@ -31,7 +31,7 @@ README.md   CLAUDE.md (schema)   index.md   log.md
 project/   overview · website · pipeline · ranking-algorithm · email-format ·
            build-request-node · parse-response-node · dedup-datatable ·
            hashtag-counts-datatable · credentials · runbook · decisions
-tech/      n8n · apify · deepseek-api · wsrv-image-proxy ·
+tech/      n8n · apify · meetapedia-router · deepseek-api · wsrv-image-proxy ·
            nextjs · node-sqlite · newsletter-delivery · pdfkit
 format/    okf · llm-wiki-pattern
 ```
@@ -42,7 +42,7 @@ frontmatter and links to siblings with bundle-relative `/path.md` links.
 ## Three layers (Karpathy)
 
 1. **Raw sources** (immutable): the n8n workflow JSON, node code, the `web/` codebase,
-   Apify/DeepSeek/Gmail docs, chat history.
+   Apify/router/Gmail docs, chat history.
 2. **The wiki** (this repo, LLM-owned): summaries, concept pages, cross-references.
 3. **The schema** ([CLAUDE.md](/CLAUDE.md)): structure, conventions, workflows.
 

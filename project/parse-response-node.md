@@ -1,19 +1,22 @@
 ---
 type: Code Node
 title: Parse response node
-description: Validates the DeepSeek JSON response, scores and sorts the picks deterministically, and renders the email HTML including the hashtag delta block.
+description: Validates the model's JSON response, scores and sorts the picks deterministically, and renders the email HTML including the hashtag delta block.
 resource: https://<n8n-host>/workflow/<workflow-id>
-tags: [code, n8n, ranking, html, deepseek]
-timestamp: 2026-08-07T00:00:00Z
+tags: [code, n8n, ranking, html, llm]
+timestamp: 2026-08-18T00:00:00Z
 ---
 
-An [n8n](/tech/n8n.md) Code node after the [DeepSeek](/tech/deepseek-api.md) HTTP node. It owns the
+An [n8n](/tech/n8n.md) Code node after the **AI - Meetapedia router** HTTP node
+([meetapedia-router](/tech/meetapedia-router.md)). It owns the
 [ranking](/project/ranking-algorithm.md) and the [email rendering](/project/email-format.md).
-Named **Parse response** (it was "Parse Claude" until the 2026-08-07 model switch).
+Named **Parse response** (it was "Parse Claude" until the 2026-08-07 model switch); the name survived the
+2026-08-18 router switch untouched, and so did every field it reads — the gateway speaks the same OpenAI
+envelope.
 
 ## Steps
 
-1. **Parse** `choices[0].message.content` → `JSON.parse` → `{picks:[…]}`.
+1. **Parse** `choices[0].message.content` → strip fence (`jsonSlice`, below) → `JSON.parse` → `{picks:[…]}`.
 2. **Validate** — the model output is *not* schema-enforced (see below). Drop malformed picks.
 3. **Enrich** each pick: look up `cands[pick.index]` from
    [build-request-node](/project/build-request-node.md) (via `$('Build request').first().json.cands`)
@@ -29,15 +32,27 @@ Named **Parse response** (it was "Parse Claude" until the 2026-08-07 model switc
    - `html` is consumed by the Gmail node.
    - `hashtagStats` is consumed by **Split counts** → [hashtag counts](/project/hashtag-counts-datatable.md).
 
+## <a id="jsonslice"></a>`jsonSlice`: the fence strip (2026-08-18)
+
+JSON mode guarantees *syntactically valid JSON*, **not** our shape — and only for providers that support
+it. Since the [router](/tech/meetapedia-router.md#json) switch the call can land on a provider with
+`json_mode: false`, where the gateway drops `response_format` and the prompt alone asks for JSON. Those
+models routinely answer inside a ```` ```json ```` fence or wrap the object in a sentence, which
+`JSON.parse` rejects outright.
+
+`jsonSlice()` therefore strips a leading/trailing fence and cuts to the **outermost braces**
+(`indexOf('{')` … `lastIndexOf('}')`) before parsing. On a clean `json_object` answer it is a no-op, so
+the DeepSeek fallback path is unaffected. A parse failure still degrades to zero picks — it does not throw.
+
 ## Validation rules (why this step exists)
 
-DeepSeek's JSON mode guarantees *syntactically valid JSON*, **not** our shape — and its docs admit the
-API "may occasionally return empty content". So the node defends explicitly:
+The model output is not schema-enforced by anyone in the chain, and providers do occasionally return
+empty content. So the node defends explicitly:
 
 | Check | Action on failure |
 |---|---|
 | Response content empty / not parseable JSON | Treat as `{picks:[]}` — **Has picks?** stops the run, no email. Never throw. |
-| `finish_reason === 'length'` **and** empty content | Same (zero picks), but the node sets `truncated: true` and passes `finishReason` through, because this is a *budget* failure, not an empty selection. See [deepseek-api](/tech/deepseek-api.md#thinking). |
+| `finish_reason === 'length'` **and** empty content | Same (zero picks), but the node sets `truncated: true` and passes `finishReason` through, because this is a *budget* failure, not an empty selection. Still live after the router switch: `gpt-oss` reasons out of the same `max_tokens`. See [deepseek-api](/tech/deepseek-api.md#thinking). |
 | `picks` missing or not an array | Same as above. |
 | `index` not an integer within `0…cands.length-1` | Drop that pick. |
 | `line` missing or empty string | Drop that pick. |

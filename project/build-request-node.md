@@ -1,14 +1,15 @@
 ---
 type: Code Node
 title: Build request node
-description: Normalizes IG/TikTok candidates, filters and dedups, computes the hashtag deltas, and assembles the text-only DeepSeek request.
+description: Normalizes IG/TikTok candidates, filters and dedups, computes the hashtag deltas, and assembles the text-only chat request sent to the Meetapedia router.
 resource: https://<n8n-host>/workflow/<workflow-id>
-tags: [code, n8n, deepseek, hashtags]
-timestamp: 2026-08-07T00:00:00Z
+tags: [code, n8n, llm, hashtags]
+timestamp: 2026-08-18T00:00:00Z
 ---
 
 An [n8n](/tech/n8n.md) Code node ("Run Once for All Items"). It turns raw
-[Apify](/tech/apify.md) output into a [DeepSeek](/tech/deepseek-api.md) chat request body.
+[Apify](/tech/apify.md) output into an OpenAI-shaped chat request body for the
+[Meetapedia router](/tech/meetapedia-router.md).
 
 ## Steps
 
@@ -46,18 +47,35 @@ model to copy them). Asks the model to select ≤5 real first-time posts and, pe
 `index, line` and the ranking params (`csoportos, oktatos, felnott`).
 See [ranking-algorithm](/project/ranking-algorithm.md) and [email-format](/project/email-format.md).
 
+## The request body
+
+```js
+model: 'auto',        // a routing POLICY, not a model name
+max_tokens: 8000,
+stream: false,
+response_format: { type: 'json_object' },
+```
+
+- **`model: 'auto'`** lets the [router](/tech/meetapedia-router.md) pick the best free model that still
+  has daily quota. Pin `provider:model` only when a run must be reproducible — that trades the free-tier
+  failover away for a 429.
+- **`max_tokens: 8000`**, down from 16000 on 2026-08-18. The ceiling exists for *reasoning* tokens, not
+  output size: the answer is a handful of picks, but thinking models (`deepseek-v4-pro`, `gpt-oss`) draw
+  their reasoning from the same budget and at 4000 the first live run returned empty content
+  ([deepseek-api](/tech/deepseek-api.md#thinking)). 16000 is not safe across the fleet — Gemini's free
+  tier caps output at 8192 and rejects a larger ceiling outright.
+
 ## JSON output is prompt-enforced, not schema-enforced
 
-[DeepSeek](/tech/deepseek-api.md) supports only `response_format: {"type":"json_object"}` — there is no
-JSON Schema. Therefore:
+No provider in the fleet offers a JSON Schema, and several do not accept `response_format` at all — for
+those the gateway **drops the field silently** ([meetapedia-router](/tech/meetapedia-router.md#json)).
+Therefore:
 
 - The system prompt **must contain the word "json"** and a literal example of the target object:
-  `{"picks":[{"index":0,"line":"…","csoportos":true,"oktatos":false,"felnott":true}]}`.
-- `max_tokens` is set to **16000**. Not for output size — the answer is small — but because
-  `deepseek-v4-pro` thinks by default and **reasoning tokens are drawn from the same budget**. At 4000
-  the first live run spent the entire budget reasoning and returned empty content. See
-  [deepseek-api](/tech/deepseek-api.md#thinking).
-- All validation happens downstream in [parse-response-node](/project/parse-response-node.md).
+  `{"picks":[{"index":0,"line":"…","csoportos":true,"oktatos":false,"felnott":true}]}`. Since 2026-08-18
+  this example is load-bearing twice over: it is the *only* instruction a `json_mode: false` provider gets.
+- All validation happens downstream in [parse-response-node](/project/parse-response-node.md), which also
+  strips a markdown fence before parsing.
 
 ## Gotchas
 

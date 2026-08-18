@@ -4,7 +4,7 @@ title: Workflow pipeline
 description: The n8n node chain and data flow of That's a First Digest, node by node.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [pipeline, n8n, dataflow]
-timestamp: 2026-08-07T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 ---
 
 The [project](/project/thats-a-first-digest.md) is a single [n8n](/tech/n8n.md) workflow. It is one
@@ -14,7 +14,7 @@ mostly-linear chain; the only fork is after **Build request**, where the counts 
 
 ```
 Schedule (06:00) → Config → Get sent → Get counts → Apify Instagram → Apify TikTok
-   → Apify Hashtag stats → Build request ─┬─► DeepSeek ─► Parse response ─► Has picks?
+   → Apify Hashtag stats → Build request ─┬─► AI - Meetapedia router ─► Parse response ─► Has picks?
                                           │                                    │(true)
                                           │                                    ▼
                                           │                              Gmail send ─► Split picks ─► Insert row
@@ -34,7 +34,8 @@ made them execute at the *end* of the run — after Build request had already tr
 | **Apify - TikTok** | HTTP Request | `clockworks~tiktok-scraper` run-sync; `Execute Once`, `memory=4096`, `resultsPerPage=12`. |
 | **Apify - Hashtag stats** | HTTP Request | `apify~instagram-hashtag-analytics-scraper` run-sync; `Execute Once`; `includeLatestPosts`/`includeTopPosts` **false** (only `postsCount` is needed — cheaper and faster). |
 | **Build request** | Code | See [build-request-node](/project/build-request-node.md). |
-| **DeepSeek** | HTTP Request | POST `api.deepseek.com/chat/completions`, model `deepseek-v4-pro`, **text-only**, JSON mode. |
+| **AI - Meetapedia router** | HTTP Request | POST `meetapedia.com/v1/chat/completions`, `model: 'auto'`, **text-only**. Retries 3× / 5 s, because free-tier 429s are ordinary. See [meetapedia-router](/tech/meetapedia-router.md). |
+| **DeepSeek** | HTTP Request | **Disabled standby**, unwired since 2026-08-18. Kept with its credential so the paid path is a two-click rollback — see [deepseek-api](/tech/deepseek-api.md). |
 | **Parse response** | Code | See [parse-response-node](/project/parse-response-node.md) — validate, score, sort, render HTML. |
 | **Has picks?** | IF | `{{ $json.picks.length }} > 0`; false → no email. |
 | **Gmail - send digest** | Gmail | To the configured recipient, HTML `{{ $json.html }}`; n8n attribution OFF. |
@@ -61,5 +62,5 @@ This applies to all three Apify nodes. See [decisions](/project/decisions.md) an
 
 - Apify → normalized candidate: `{platform, url, text, likes, comments, date, image, location, hashtags}`.
 - Apify hashtag stats → `{hashtag, postsCount}` per configured hashtag.
-- DeepSeek → `{picks:[{index, line, csoportos, oktatos, felnott}]}` (validated, not schema-enforced).
+- Model → `{picks:[{index, line, csoportos, oktatos, felnott}]}` (validated, not schema-enforced), inside the OpenAI response envelope plus the router's additive `x_router` provenance field.
 - Parse → `{picks:[…], html, runDate, candidateCount, hashtagStats}`.

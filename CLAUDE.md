@@ -17,7 +17,7 @@ This bundle conforms to [OKF v0.1](/format/okf.md):
 
 - `project/` — everything specific to the *That's a First Digest* system and its website.
 - `nodes/` — (reserved for future) one page per n8n node if the pipeline page grows too large.
-- `tech/` — reusable knowledge about the underlying tools (n8n, Apify, DeepSeek, image proxy, and the
+- `tech/` — reusable knowledge about the underlying tools (n8n, Apify, the LLM gateway, image proxy, and the
   website stack: Next.js, node:sqlite, newsletter delivery, PDFKit).
 - `format/` — meta: the OKF spec and the LLM-wiki pattern that govern this repo.
 
@@ -61,11 +61,16 @@ Health-check periodically:
 
 ## Ground-truth invariants (guard against drift)
 
-- Model: `deepseek-v4-pro` via `api.deepseek.com/chat/completions`, **text-only** (since 2026-08-07).
+- Model: `auto` via `meetapedia.com/v1/chat/completions`, **text-only** (since 2026-08-18). `auto` is a
+  routing policy over free-tier providers, not a model name — *which* model answers is in the response's
+  `x_router` field and changes run to run. The paid `deepseek-v4-pro` node is disabled, not deleted.
 - No images are sent to any model. Image URLs exist only for email rendering (wsrv proxy).
-- DeepSeek has **no JSON Schema** — the shape is a literal example in the prompt, and
+- **No JSON Schema anywhere in the fleet** — the shape is a literal example in the prompt, and
   [parse-response-node](/project/parse-response-node.md) validates every field. Never assume the
-  response matches the shape.
+  response matches the shape. Providers with `json_mode: false` never even receive `response_format`,
+  so a markdown-fenced answer is normal; `jsonSlice` strips it before parsing.
+- `max_tokens` is **8000** and must not exceed 8192 — part of the free fleet rejects a larger ceiling.
+  It is a *reasoning* budget, not an output-size one.
 - Schedule: **daily 06:00** Europe/Berlin (Schedule node "Every day 06:00").
 - Recipient and sender: configured in the Config node and the Gmail credential.
 - The hashtag-counts branch must **never** be gated on `Has picks?` — today's totals are written even on
@@ -74,4 +79,4 @@ Health-check periodically:
   branches at the *end* of a run, so a "parallel read" is empty when the main chain asks for it. Never
   wrap a `$('...')` call in `try/catch` with a default — that hides a wiring bug as legitimate empty
   data, which is exactly how dedup stayed broken for weeks.
-- Secrets (Apify token, DeepSeek key) are never printed; the human pastes them into n8n.
+- Secrets (Apify token, `ROUTER_API_KEY`, DeepSeek key) are never printed; the human pastes them into n8n.

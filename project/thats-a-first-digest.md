@@ -4,7 +4,7 @@ title: That's a First Digest
 description: A daily n8n workflow that scrapes Instagram/TikTok and emails a Hungarian digest of people trying something for the first time.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [project, n8n, digest, strt]
-timestamp: 2026-08-07T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 ---
 
 **That's a First Digest** is an [n8n](/tech/n8n.md) workflow. Every morning it discovers recent
@@ -12,7 +12,8 @@ public social posts where someone tries something for the **first time**, ranks 
 compact **Hungarian** digest to a configured recipient.
 
 Discovery is done with [Apify](/tech/apify.md) hashtag scrapers (not web search); assembly and
-ranking with one text-only [DeepSeek](/tech/deepseek-api.md) call; delivery via the n8n Gmail node.
+ranking with one text-only [Meetapedia router](/tech/meetapedia-router.md) call over free-tier models;
+delivery via the n8n Gmail node.
 
 - **Owner:** STRT
 - **Recipient & sender:** configured in the Config node and the Gmail credential
@@ -27,7 +28,7 @@ ranking with one text-only [DeepSeek](/tech/deepseek-api.md) call; delivery via 
 See [pipeline](/project/pipeline.md) for the full node chain. In short:
 Apify scrapes IG + TikTok and reads each hashtag's total post count →
 [build-request-node](/project/build-request-node.md) normalizes candidates, computes the hashtag deltas,
-and assembles a text-only [DeepSeek](/tech/deepseek-api.md) request → the model selects ≤5 posts and
+and assembles a text-only [router](/tech/meetapedia-router.md) request → the model selects ≤5 posts and
 extracts ranking parameters from the captions →
 [parse-response-node](/project/parse-response-node.md) validates, scores, sorts, and renders the
 [email](/project/email-format.md) → Gmail sends → the picks are written to the

@@ -4,10 +4,44 @@ title: Design decisions
 description: Why the system is built the way it is — the non-obvious choices and what forced them.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [decisions, adr, rationale]
-timestamp: 2026-08-07T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 ---
 
 Non-obvious choices, newest context on top. Each is a small ADR.
+
+## <a id="meetapedia-router"></a>Free-tier router instead of the paid DeepSeek call (2026-08-18)
+The user asked to replace the paid model call with the free AI access already built in their other
+project: *"a ../meetapedia projektben találsz egy ingyenes ai hívási lehetőséget, azt tedd be a deepseek /
+openai helyett"*. That project exposes its free-tier model router as an OpenAI-compatible gateway, so the
+switch is a URL, a credential and `model: 'auto'` — see [meetapedia-router](/tech/meetapedia-router.md).
+
+- **Why it was nearly free to do:** the gateway speaks the same wire format, so
+  [parse-response-node](/project/parse-response-node.md) reads the same `choices[0].message.content` and
+  the same `finish_reason`. No node was rewritten; one was added.
+- **Not a rename.** A **new** node `AI - Meetapedia router` was inserted and the old `DeepSeek` node was
+  disabled and unwired rather than re-pointed. Rollback is enabling one node and moving one connection,
+  and the [rename trap](/tech/n8n.md#renaming) never comes into play — nothing references either node
+  with `$('…')` (verified against the live workflow JSON, 2026-08-18).
+- **Accepted: we no longer know which model answered.** `auto` picks per call from Groq / Cerebras /
+  Gemini / Mistral / OpenRouter by measured quality and remaining quota. The response's `x_router` field
+  records what actually served it, which is why it is worth reading before blaming the prompt.
+- **Accepted: JSON mode is now best-effort.** Providers with `json_mode: false` never see
+  `response_format`, so a fenced answer is normal. Handled by `jsonSlice` in
+  [parse-response-node](/project/parse-response-node.md#jsonslice) — the alternative, pinning a
+  `json_mode: true` provider, would give up the failover that makes the free tier reliable.
+- **Accepted: `max_tokens` fell 16000 → 8000.** Gemini's free tier caps output at 8192; the old ceiling
+  would have been rejected outright by part of the fleet. The answer needs a few hundred tokens; the rest
+  is reasoning headroom.
+- **Rejected: signing up for a free vendor tier directly** (Groq or Gemini with our own key). Same money,
+  but a single provider has no failover, no quota ledger, and its own key to rotate — the router already
+  owns all three, and its DeepSeek entry stays parked behind `allow_paid: false` so a spent free day
+  cannot silently start billing.
+- **Cost:** the model line drops from ~$0.09/month to **$0**. Apify was already ~99% of the bill, so this
+  is not what makes the digest cheap — it removes the last recurring model cost and the last vendor key.
+- **New dependency, and it is ours:** the digest now depends on the Meetapedia deployment being up. A 502
+  or 429 is retried 3× by the node; a longer outage means no digest that morning, with the disabled
+  DeepSeek node as the manual escape hatch. Gateway calls also spend the *same* daily provider ledger as
+  the Meetapedia crawler — one call a day is noise against 500–14400 requests/day, but it is not zero.
 
 ## <a id="deepseek"></a>DeepSeek chat instead of Claude vision (2026-08-07)
 The user moved the workflow to the **DeepSeek API** and dropped image analysis: *"nem érdekel a
@@ -24,7 +58,9 @@ képfeldolgozás már, azt kiszedheted belőle, csak a chat"*. Consequences, all
   drop them rather than invent caption-based replacements, accepting flatter ordering and more
   engagement-decided ties. See [ranking-algorithm](/project/ranking-algorithm.md).
 - **Cheaper and faster:** the model cost fell from ~$8/month to ~$0.09/month and a run lost the ~15 image
-  downloads. See [runbook](/project/runbook.md).
+  downloads. See [runbook](/project/runbook.md). (Superseded 2026-08-18 by the
+  [free-tier router](#meetapedia-router), which took the model line to $0 — the JSON-Schema and
+  parameter-extraction consequences below still hold.)
 - **Images stay in the email.** Only the *model* stopped seeing them; the
   [wsrv proxy](/tech/wsrv-image-proxy.md) is untouched.
 

@@ -13,7 +13,7 @@ The [pipeline](/project/pipeline.md) is one n8n workflow.
 ## Concepts used here
 
 - **Trigger nodes** — a Schedule Trigger fires the daily run (interval Days, hour/minute).
-- **HTTP Request nodes** — call Apify and [DeepSeek](/tech/deepseek-api.md); auth via generic credentials
+- **HTTP Request nodes** — call Apify and the [Meetapedia router](/tech/meetapedia-router.md); auth via generic credentials
   ([credentials](/project/credentials.md)). `Execute Once` (Settings tab) runs the node a single time
   regardless of input item count — critical for the [Apify](/tech/apify.md) nodes.
 - **Code nodes** — JavaScript, "Run Once for All Items". Have `this.helpers.httpRequest`, `Buffer`,

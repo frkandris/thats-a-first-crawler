@@ -1,16 +1,25 @@
 ---
 type: Tool
 title: DeepSeek API
-description: The OpenAI-compatible chat API that performs selection and parameter extraction for the digest, text-only.
+description: SUPERSEDED 2026-08-18 — the paid chat API that performed selection and parameter extraction until the Meetapedia router took over; kept as the documented fallback.
 resource: https://api-docs.deepseek.com
 tags: [deepseek, api, chat, json-mode, llm]
-timestamp: 2026-08-07T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 ---
 
-Selection + parameter extraction is **one text-only chat call** to the DeepSeek API, assembled by
+> **Superseded on 2026-08-18.** The digest no longer calls this API directly: the daily call goes to the
+> [Meetapedia router gateway](/tech/meetapedia-router.md), which spends free-tier capacity first
+> ([decisions](/project/decisions.md#meetapedia-router)). This page stays because DeepSeek is still the
+> **fallback**: the `DeepSeek` n8n node is kept disabled next to the router node and the `DeepSeek header`
+> credential is untouched, so re-pointing the chain here is a two-click rollback. Everything below still
+> describes that node accurately — including the thinking-token trap, which now applies to the free
+> reasoning models too.
+
+Selection + parameter extraction was **one text-only chat call** to the DeepSeek API, assembled by
 [build-request-node](/project/build-request-node.md) and parsed by
 [parse-response-node](/project/parse-response-node.md). It replaced the Anthropic Claude vision call on
-**2026-08-07** — see [decisions](/project/decisions.md#deepseek).
+**2026-08-07** — see [decisions](/project/decisions.md#deepseek) — and was itself replaced on
+**2026-08-18**.
 
 ## Request shape
 
