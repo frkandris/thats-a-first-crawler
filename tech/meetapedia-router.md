@@ -57,10 +57,30 @@ Models is disabled upstream (410, service retirement). DeepSeek is in the catalo
 
 ## What this costs us
 
-Nothing per call — but the gateway spends the **same daily ledger as the Meetapedia crawler**. One digest
-call a day is negligible against budgets of 500–14400 requests/day per provider, so the crawler is the
-one at risk, not the digest. `GET /v1/quota` shows today's per-provider `budget / used / remaining /
-blocked`.
+Nothing per call — but the gateway spends the **same daily ledger as the Meetapedia crawler**, and on
+2026-08-18 that turned out to be the binding constraint, in the opposite direction from what was assumed.
+
+Measured at 11:52 UTC that day, `GET /v1/quota` read:
+
+| provider | budget | used | remaining |
+|---|---|---|---|
+| cerebras | 536 | 579 | **0** |
+| mistral | 475 | 491 | **0** |
+| groq | 336 | 355 | **0** |
+| gemini | 1425 | 804 | 621 (`blocked`) |
+| openrouter | 47 | 51 | **0** |
+
+Every live completion returned `502 upstream_unavailable: all providers rate limited` — eight attempts
+over six minutes, none served. The crawler had spent the entire day's free capacity by midday, and the
+`continuous worker` shipped the same morning removes the old time windows, so it now spends steadily
+rather than in a night block.
+
+**So "one call a day is negligible" is true about volume and false about availability.** The digest is
+not a heavy consumer; it is a *late* one. Its call lands at 06:00 Europe/Berlin = **04:00 UTC**, four
+hours after the ledger's midnight-UTC rollover and therefore behind whatever the crawler already took.
+The gateway has **no per-key quota** — its own documentation names this as the feature to add when one
+consumer starves another, which is exactly this case. Nothing about the digest's configuration can fix
+it from this side; see [decisions](/project/decisions.md#meetapedia-router) for the options.
 
 ## <a id="json"></a>JSON mode is best-effort here
 

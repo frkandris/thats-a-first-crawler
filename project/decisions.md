@@ -40,8 +40,22 @@ switch is a URL, a credential and `model: 'auto'` — see [meetapedia-router](/t
   is not what makes the digest cheap — it removes the last recurring model cost and the last vendor key.
 - **New dependency, and it is ours:** the digest now depends on the Meetapedia deployment being up. A 502
   or 429 is retried 3× by the node; a longer outage means no digest that morning, with the disabled
-  DeepSeek node as the manual escape hatch. Gateway calls also spend the *same* daily provider ledger as
-  the Meetapedia crawler — one call a day is noise against 500–14400 requests/day, but it is not zero.
+  DeepSeek node as the manual escape hatch.
+- **The real exposure is quota, not uptime — and it was measured wrong at first.** Gateway calls spend the
+  *same* daily ledger as the Meetapedia crawler. "One call a day is noise" is true about volume and false
+  about availability: by 11:52 UTC on the switch day every free provider read `remaining: 0` and eight
+  consecutive live calls returned `all providers rate limited`. The digest is not a heavy consumer, it is
+  a **late** one — 06:00 Europe/Berlin is 04:00 UTC, four hours after the ledger's rollover, so it eats
+  whatever the crawler left. The `continuous worker` deployed the same morning spends steadily instead of
+  in a night block, which makes this worse, not better.
+  **Decided 2026-08-18: change nothing yet and observe the 06:00 run.** Four hours of crawler spend is not
+  twelve, so there is likely capacity at 04:00 UTC; the day's exhausted state was measured at midday and
+  does not predict dawn. Rejected for now, in preference order if a morning does fail:
+  **per-key quota** in the gateway (the ledger already counts per provider, so this is a column, not a
+  redesign — and the gateway's own docs name it as the fix when one consumer starves another);
+  **`allow_paid: true`** (works, but applies to every crawler call too, so it buys the digest's
+  availability with the crawler's money); **rolling back to the DeepSeek node** (~$0.09/month, guaranteed
+  service, and the standby is still wired for exactly this).
 
 ## <a id="deepseek"></a>DeepSeek chat instead of Claude vision (2026-08-07)
 The user moved the workflow to the **DeepSeek API** and dropped image analysis: *"nem érdekel a

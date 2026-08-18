@@ -214,3 +214,22 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   this n8n version: after the PUT, Version History showed `Current changes (Published)` stamped with the
   write's timestamp and the Publish button was disabled. Corrected rather than deleted, keeping the case
   that *does* still need Publish (inactive workflow, or an edit made in the editor).
+- **Ingest** — **Verification, and the wall it hit.** The key works: `GET /v1/models` answered 200 on
+  12/12 calls with the new bearer token. But **no live completion could be served all day**: eight
+  attempts (Cloudflare bypassed, so the gateway's own envelope was visible) returned
+  `502 upstream_unavailable: all providers rate limited`, and `GET /v1/quota` at 11:52 UTC showed
+  `remaining: 0` on cerebras, mistral, groq and openrouter, with gemini `blocked`. The Meetapedia crawler
+  had spent the day's free capacity by midday. Recorded in [meetapedia-router](/tech/meetapedia-router.md)
+  and as an ADR consequence in [decisions](/project/decisions.md#meetapedia-router).
+  **Decision (user, 2026-08-18): change nothing, observe the 06:00 run** — 04:00 UTC is four hours after
+  the rollover, not twelve, so midday exhaustion does not predict dawn. A morning-check procedure is in
+  [runbook](/project/runbook.md), reading `x_router` first.
+- **Ingest** — Two operational facts worth keeping. The site returned proxy-level **404s for ~10 minutes**
+  after the env change, and it was **not** the env: the app logged `model_router_ready … total=12` and
+  `pipeline_complete` throughout. Two deploys ran back to back — the operator's manual one and an
+  **API-sourced** one two minutes later on the same commit — and during the container swap Traefik had no
+  route. Success rate went 404 → mixed → 12/12 without intervention. The Meetapedia wiki's own warning
+  about concurrent deploys covers this; the lesson here is to **diagnose from the runtime log, not from
+  the public URL**, before touching anything. Second: the digest's Cloudflare path adds a failure mode the
+  gateway docs do not — a call that waits out a per-minute pacing window returned Cloudflare's own
+  `error code: 502` (plain text, not the OpenAI error envelope) after 55 s.

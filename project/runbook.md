@@ -50,7 +50,7 @@ then **Publish** to activate. See [build-request-node](/project/build-request-no
 | `JSON.parse` error in Parse response | prompt lost the literal "json" example, or the answer was truncated. A markdown fence is **not** a cause any more — `jsonSlice` strips it ([parse-response-node](/project/parse-response-node.md#jsonslice)) | restore the example in the system prompt; check `raw` on the parse output to see what the model actually sent |
 | Picks have wrong/missing fields | no server-side schema anywhere in the fleet; a `json_mode: false` provider does not even get `response_format` | validation/coercion in [parse-response-node](/project/parse-response-node.md) handles it; check `x_router` for which model, tighten the prompt example if it persists |
 | **AI - Meetapedia router** returns **401** `invalid_api_key` | the `Meetapedia router header` credential holds a placeholder, or the key is not in the gateway's `ROUTER_API_KEY` allowlist | paste the real key into the n8n credential; verify with `curl -H "Authorization: Bearer <key>" https://meetapedia.com/v1/models` |
-| **429** `quota_exhausted` | every free provider is out of *daily* budget — a normal free-tier end state, not an outage | `GET /v1/quota` shows per-provider `remaining`; wait for the UTC rollover, or run the digest manually later. Persistent → enable the DeepSeek standby |
+| **429** `quota_exhausted` / **502** `all providers rate limited` | every free provider is out of *daily* budget. **Expected to happen sometimes**: the Meetapedia crawler shares the ledger and had spent the whole day's capacity by 11:52 UTC on 2026-08-18 | `GET /v1/quota` shows per-provider `remaining`. A retry does not help — the budget is daily. Options, in order: wait for the next midnight-UTC rollover; add a per-key quota in the gateway; enable the DeepSeek standby. See [decisions](/project/decisions.md#meetapedia-router) |
 | **429** `rate_limited` / **502** `upstream_unavailable` | a per-minute window or a provider hiccup | the node retries 3× at 5 s and the router picks another provider; nothing to do unless it fails all three |
 | **503** `router_disabled` | the Meetapedia deploy has `router.enabled: false` or no provider keys | operator fix in that project; meanwhile use the DeepSeek standby |
 | Digest missing and the router is down for good | gateway outage | **Rollback:** enable the disabled `DeepSeek` node, connect `Build request → DeepSeek → Parse response` (keep the router node's slot order — `Split counts` must stay second), set `model` back to `'deepseek-v4-pro'` in Build request, Publish. The `DeepSeek header` credential is still in place |
@@ -68,6 +68,21 @@ then **Publish** to activate. See [build-request-node](/project/build-request-no
 | Repeated posts | URL-format mismatch defeated dedup | `canon()` normalizes both sides ([dedup-datatable](/project/dedup-datatable.md)); reposts with different URLs are a known gap |
 | Too few / fun items | analyzing only top-by-engagement; loose filter | first-time-signal ranking + 30 analyzed + strict exclusion ([decisions](/project/decisions.md)) |
 | No email | 0 picks after dedup/selection | expected when nothing qualifies; check **Has picks?** |
+
+## Morning check after the router switch (from 2026-08-19)
+
+The switch is wired and the key is verified, but **no live completion has ever been served through it** —
+every attempt on 2026-08-18 hit the exhausted free tier. So the first real evidence comes from the 06:00
+run. In the executions tab, in this order:
+
+1. **AI - Meetapedia router → output → `x_router`** — names the provider/model that answered. Its
+   presence alone proves the whole path (credential, allowlist, routing) works.
+2. **Parse response → `picks` and `parseError`/`raw`** — a `parseError` with a fenced `raw` would mean
+   `jsonSlice` missed a shape; a non-empty `picks` means the Hungarian prompt survived the model change.
+3. **A 429/502 on the router node** — not a bug, it is the quota collision above. Check `GET /v1/quota`
+   before changing anything.
+4. Compare the email against a pre-switch one: the ranking is deterministic and unchanged, so any drop in
+   quality is the model's *selection*, which is what `x_router` lets you attribute.
 
 ## Cost
 
