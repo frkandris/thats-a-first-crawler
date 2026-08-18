@@ -83,8 +83,11 @@ content: ""               ← nothing left for the answer
 ```
 
 The request looked successful (HTTP 200, valid response object) and produced **zero picks** silently.
-`max_tokens` is now **16000**, which leaves ample room after reasoning; at one call a day the extra
-output tokens cost fractions of a cent.
+`max_tokens` was raised to 16000 that day and **lowered to 8000 on 2026-08-18** with the
+[router switch](/tech/meetapedia-router.md): part of the free fleet rejects a ceiling above 8192. That is
+the value the fallback would run with too, since the budget lives in
+[build-request-node](/project/build-request-node.md), not here — still 2× the reasoning burn that caused
+the 2026-08-07 failure, so it remains ample for this task.
 
 Thinking can also be steered explicitly with `thinking: {"type": "enabled"}` and
 `reasoning_effort: "high"`. We leave the defaults: the selection task benefits from reasoning, and the

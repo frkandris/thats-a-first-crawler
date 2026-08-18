@@ -4,7 +4,7 @@ title: Ranking algorithm
 description: Deterministic scoring and sort that orders the daily picks from caption-derived parameters extracted by the model.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [ranking, scoring]
-timestamp: 2026-08-07T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 ---
 
 Ranking is **deterministic and done in code** ([parse-response-node](/project/parse-response-node.md)), not

@@ -233,3 +233,17 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   the public URL**, before touching anything. Second: the digest's Cloudflare path adds a failure mode the
   gateway docs do not — a call that waits out a per-minute pacing window returned Cloudflare's own
   `error code: 502` (plain text, not the OpenAI error envelope) after 55 s.
+- **Lint** — Full pass over the bundle after the router switch. **Structure clean:** 23 concept pages, every
+  non-reserved page carries a non-empty `type`, 0 broken bundle-relative links, 0 orphans, README badge
+  count matches. **Verified against ground truth** rather than by reading: the live workflow JSON was
+  diffed against the pipeline/build-request/parse-response pages — router URL, `maxTries: 3` /
+  `waitBetweenTries: 5000`, `DeepSeek` disabled *and* absent from `connections`, `Build request`'s output
+  order (`AI - Meetapedia router` before `Split counts`), schedule hour 6, `model: 'auto'`,
+  `max_tokens: 8000`, `lookbackDays: 30`, 5 hashtags, `cands.slice(0, 30)`, `items.slice(0, 5)`,
+  `executeOnce` on all three Apify nodes, `jsonSlice` present — all match.
+  **Three defects found and fixed:** [deepseek-api](/tech/deepseek-api.md) still asserted
+  `max_tokens` **is now 16000**, contradicting the 8000 shipped that morning (it now records both values
+  and which one a rollback would use); [ranking-algorithm](/project/ranking-algorithm.md) and
+  [n8n](/tech/n8n.md) were edited that day but kept their 2026-08-07 timestamps; and
+  [wsrv-image-proxy](/tech/wsrv-image-proxy.md) still scoped "no images" to the DeepSeek call, which now
+  reads as if the claim expired with it.

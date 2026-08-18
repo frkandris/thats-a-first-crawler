@@ -4,7 +4,7 @@ title: n8n
 description: The self-hosted workflow-automation platform that runs the digest.
 resource: https://<n8n-host>
 tags: [n8n, automation, platform]
-timestamp: 2026-08-07T00:00:00Z
+timestamp: 2026-08-18T00:00:00Z
 ---
 
 [n8n](https://n8n.io) is a node-based workflow-automation tool. STRT runs a self-hosted instance.
