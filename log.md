@@ -203,6 +203,14 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   [ranking-algorithm](/project/ranking-algorithm.md), [thats-a-first-digest](/project/thats-a-first-digest.md),
   [n8n](/tech/n8n.md), the three index pages, the README badges and the
   [CLAUDE.md](/CLAUDE.md) ground-truth invariants.
-- **Not yet verified against a live run:** the gateway credential holds a placeholder until the human
-  pastes the key, so the switched chain is wired but unproven. Until then the 06:00 run would 401 —
-  see [runbook](/project/runbook.md).
+- **Ingest** — **Key provisioned the same day.** A dedicated `sk-firstdigest-…` key was generated locally,
+  written into the n8n credential over the API (the placeholder credential was deleted and recreated —
+  the public API has no credential-update route — and the router node re-pointed at the new id), and
+  **appended** to the gateway's existing `ROUTER_API_KEY`. That variable already held a value for another
+  consumer, and the gateway parses it as a comma-separated allowlist, so overwriting it would have revoked
+  that consumer. Set on the Meetapedia deployment's `community-scraper` app (Coolify → Environment
+  Variables, Production scope); it needs a redeploy to take effect.
+- **Lint** — **The "API writes are not published" claim in [runbook](/project/runbook.md) was wrong** for
+  this n8n version: after the PUT, Version History showed `Current changes (Published)` stamped with the
+  write's timestamp and the Publish button was disabled. Corrected rather than deleted, keeping the case
+  that *does* still need Publish (inactive workflow, or an edit made in the editor).

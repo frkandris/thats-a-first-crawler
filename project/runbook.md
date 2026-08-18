@@ -25,8 +25,11 @@ faster on 2026-08-07: the ~15 image downloads and the vision call are gone. Chec
 (`provider`, `model`, `quality`). With `model: 'auto'` this changes run to run — a digest that suddenly
 reads worse is a routing question before it is a prompt question.
 
-**Publishing matters:** writing the workflow over the REST API saves it, but the scheduled 06:00 run uses
-the **published** version. After any API-side change, hit **Publish** in the editor.
+**Publishing:** a `PUT /api/v1/workflows/{id}` on an **active** workflow lands as the *published* version —
+after the 2026-08-18 API writes the editor's Version History showed `Current changes (Published)` stamped
+with that write's timestamp, and the **Publish** button was correctly greyed out because nothing was left
+to publish. Earlier guidance here said the opposite; it was wrong for this n8n version. Still open the
+editor after an API change: an *inactive* workflow, or an edit made in the editor itself, does need Publish.
 
 **Testing the hashtag delta:** the block needs at least two runs on different dates to show anything —
 the first run only seeds [the counts table](/project/hashtag-counts-datatable.md) and the block is
