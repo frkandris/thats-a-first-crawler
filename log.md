@@ -247,3 +247,26 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   [n8n](/tech/n8n.md) were edited that day but kept their 2026-08-07 timestamps; and
   [wsrv-image-proxy](/tech/wsrv-image-proxy.md) still scoped "no images" to the DeepSeek call, which now
   reads as if the claim expired with it.
+
+## 2026-08-19
+
+- **Query → Ingest** — *"nem jött ma email"*. The executions tell a longer story than one morning: **no
+  digest has been sent for a week**, from three unrelated causes.
+  `2026-08-13/14` — `Apify - Instagram` **403 Forbidden**, the monthly hard limit
+  ([runbook](/project/runbook.md)). `2026-08-15…18` — `DeepSeek` **402 Payment required**, four silent
+  failures nobody saw, because a run that dies before the Gmail node produces no signal at all.
+  `2026-08-19` — the first run on the new path: every node green through `Build request` (Apify, both
+  Data Table reads, dedup), failing only at `AI - Meetapedia router` with a Cloudflare **502**.
+  So the switch **caused no regression** — it moved the failure four nodes later, and this was the first
+  morning in four days that the chain even reached a model call.
+- **Ingest** — **The gateway's binding constraint is per-minute, not per-day.** At 08:00 UTC the ledger
+  read `groq remaining=13380` and `gemini remaining=1099`, both `blocked=True`, and a live call still
+  returned `all providers rate limited` in 0.27 s. The crawler's continuous worker keeps every provider
+  inside its rpm window, so the digest's single daily call finds the door shut whatever the daily budget
+  says. Recorded in [meetapedia-router](/tech/meetapedia-router.md) and decided in
+  [decisions](/project/decisions.md#own-groq-key): **the digest gets its own free Groq key** and calls
+  Groq directly, instead of competing with a throughput job for the same rpm windows.
+- **Lint** — Corrected a claim written the day before: [decisions](/project/decisions.md#meetapedia-router)
+  called the disabled DeepSeek node a "guaranteed" fallback worth ~$0.09/month. It is not — that account
+  has been `402` since 2026-08-15. The runbook gains a 402 row, and the general lesson: **a standby that
+  is never exercised is not a fallback.**

@@ -54,8 +54,31 @@ switch is a URL, a credential and `model: 'auto'` — see [meetapedia-router](/t
   **per-key quota** in the gateway (the ledger already counts per provider, so this is a column, not a
   redesign — and the gateway's own docs name it as the fix when one consumer starves another);
   **`allow_paid: true`** (works, but applies to every crawler call too, so it buys the digest's
-  availability with the crawler's money); **rolling back to the DeepSeek node** (~$0.09/month, guaranteed
-  service, and the standby is still wired for exactly this).
+  availability with the crawler's money); **rolling back to the DeepSeek node** — which on 2026-08-19 turned out
+  **not to be a working escape hatch at all**: that account has been answering
+  `402 Payment required` since 2026-08-15, so four digests had already failed there before the switch.
+  A standby nobody exercises is a standby nobody can trust; see [runbook](/project/runbook.md).
+
+## <a id="own-groq-key"></a>A dedicated free key instead of the shared gateway (2026-08-19)
+The first 06:00 run on the router failed with `502 all providers rate limited` — **with 13,380 Groq and
+1,099 Gemini requests still unspent that day**. Daily budget was never the binding constraint: the
+Meetapedia crawler's continuous worker keeps every provider inside its **per-minute** window, so an
+outside caller with one request a day finds the door shut essentially always.
+
+Sharing a quota pool works when consumers are similar. Here they are not: the crawler is a
+throughput job that will always absorb whatever headroom exists, and the digest needs *one* call at a
+fixed minute. No routing policy fixes that asymmetry from the digest's side.
+
+**Decision: the digest gets its own free-tier Groq key and calls Groq directly.** Groq's free tier is
+14,400 requests/day against our one; the crawler cannot starve it, the digest cannot dent the crawler's
+budget, and the call stays free — which was the point of the exercise. Rejected: reserving capacity for
+one key inside the gateway (real work, and it buys the digest's availability out of the crawler's
+throughput); `allow_paid` (spends money on every crawler call to fix one digest call); DeepSeek (not
+free, and currently not even paid up).
+
+The router work is **not wasted**: it proved the free-tier path end to end, and
+[meetapedia-router](/tech/meetapedia-router.md) stays as the documented way to reach a whole fleet when
+a job can tolerate scheduling.
 
 ## <a id="deepseek"></a>DeepSeek chat instead of Claude vision (2026-08-07)
 The user moved the workflow to the **DeepSeek API** and dropped image analysis: *"nem érdekel a
