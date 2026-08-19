@@ -21,7 +21,7 @@ Authorization: Bearer <GROQ_API_KEY>
 
 {
   "model": "openai/gpt-oss-120b",
-  "max_tokens": 4000,
+  "max_tokens": 3000,
   "reasoning_effort": "low",
   "stream": false,
   "response_format": {"type": "json_object"},
@@ -41,17 +41,22 @@ HTTP 413  "Request too large … on tokens per minute (TPM):
 ```
 
 That was the digest's own request with the inherited `max_tokens: 8000` — 456 tokens of prompt in a
-trimmed test, and the ceiling alone blew the window. The real request is ~3400 prompt tokens (30
-candidates), so the arithmetic that governs the config is:
+trimmed test, and the ceiling alone blew the window.
+
+**Size it against the worst case the node can produce, not the prompt you happened to measure.** The
+observed request was ~3400 tokens, but [build-request-node](/project/build-request-node.md) sends up to
+30 candidates with captions truncated at 300 characters, so the ceiling it can reach is ~4600:
 
 ```
-3398 (prompt) + 4000 (max_tokens) = 7398 ≤ 8000     ✅ one call per minute
-3398           + 4600             = 7998            ✅ but no headroom for a longer prompt
-3398           + 8000             = 11398           ❌ 413, every time
+3398 (observed prompt) + 3000 = 6398   ✅
+4571 (worst case)      + 3000 = 7571   ✅  headroom: 429 tokens
+4571                   + 4000 = 8571   ❌  413 on any long-caption day
+3398                   + 8000 = 11398  ❌  413, every time
 ```
 
-`max_tokens: 4000` is therefore not a truncation risk traded for safety — it is the *largest* ceiling
-that leaves room for the prompt to grow. Measured completion: **805 tokens**, five times under the cap.
+`max_tokens: 4000` shipped first and would have passed for days before failing on a slow news morning
+with chatty captions. The worst case is computed and asserted in `tests/build-request.test.mjs`; that
+test is what found it. Measured completion: **805 tokens**, well under the 3000 cap.
 
 **A 413 is not retryable in any useful sense** (the node's 3 retries send the identical oversized body).
 If the candidate list ever grows — more hashtags, longer captions — the prompt grows with it and the
@@ -64,7 +69,7 @@ not a synthetic prompt:
 
 | model | max_tokens / effort | latency | completion | outcome |
 |---|---|---|---|---|
-| **`openai/gpt-oss-120b`** | 4000 / `low` | **2.0 s** | 805 | 4 picks, Hungarian line format intact, accents and engagement suffix correct |
+| **`openai/gpt-oss-120b`** | 4000 / `low` | **2.0 s** | 805 | 4 picks, Hungarian line format intact, accents and engagement suffix correct (shipped at 3000 — see above) |
 | `openai/gpt-oss-20b` | 4000 / `low` | 0.9 s | 408 | 4 picks, but the language drifts — `"Mushroom coffee first cup"`, the invented word `"Lovasmenetés"`, and the `- N like, N komment` suffix dropped |
 | `qwen/qwen3.6-27b` | 4000 / — | 8.6 s | — | **`json_validate_failed`** — cannot hold `response_format: json_object` on this prompt |
 | `openai/gpt-oss-120b` | 4600 / `medium` | 3.1 s | 1296 | 4 picks, but returned the same activity twice and one self-contradicting line (`"Pilates - egyedül - oktatóval"`) |

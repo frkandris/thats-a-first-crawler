@@ -32,3 +32,4 @@ and [log.md](/log.md) for history.
 ## Format — meta
 - [okf](/format/okf.md) — Open Knowledge Format v0.1 specification.
 - [llm-wiki-pattern](/format/llm-wiki-pattern.md) — Karpathy's LLM-maintained wiki pattern and its page discipline.
+- [engineering-practices](/format/engineering-practices.md) — which engineering practices this repo implements, how, and what it skips.

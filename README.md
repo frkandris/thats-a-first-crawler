@@ -5,7 +5,7 @@
 ![runs on: n8n](https://img.shields.io/badge/runs%20on-n8n-EA4B71)
 ![LLM: free-tier router](https://img.shields.io/badge/LLM-free--tier%20router-2ea44f)
 ![status: live daily 06:00](https://img.shields.io/badge/status-live%20daily%2006%3A00-brightgreen)
-![docs: 24 concept pages](https://img.shields.io/badge/docs-24%20concept%20pages-blue)
+![docs: 25 concept pages](https://img.shields.io/badge/docs-25%20concept%20pages-blue)
 
 An **LLM-maintained knowledge base** for STRT's *"That's a First Digest"* project — a daily
 [n8n](/tech/n8n.md) workflow that scrapes Instagram/TikTok and emails a Hungarian digest of people
@@ -33,7 +33,7 @@ project/   overview · website · pipeline · ranking-algorithm · email-format 
            hashtag-counts-datatable · credentials · runbook · decisions
 tech/      n8n · apify · groq · meetapedia-router · deepseek-api · wsrv-image-proxy ·
            nextjs · node-sqlite · newsletter-delivery · pdfkit
-format/    okf · llm-wiki-pattern
+format/    okf · llm-wiki-pattern · engineering-practices
 ```
 
 Every non-reserved page carries `type`, `title`, `description`, `resource`, `tags`, `timestamp`

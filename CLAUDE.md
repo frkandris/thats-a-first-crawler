@@ -38,6 +38,19 @@ From the [LLM-wiki pattern](/format/llm-wiki-pattern.md); these are binding, not
   things that no longer exist at all.
 - **Wiki updates ship in the same commit as the change that caused them.**
 
+## Working on the pipeline code
+
+The Code nodes are mirrored into `nodes/*.js` by `scripts/sync_nodes.py` and covered by
+`tests/*.test.mjs`. See [engineering-practices](/format/engineering-practices.md) for why.
+
+- **n8n is the system of record.** Edit there, then `python3 scripts/sync_nodes.py` to pull the change
+  into the repo. Editing `nodes/*.js` by hand achieves nothing — the next sync overwrites it.
+- **`bash scripts/check.sh` before every commit**: node syntax, tests, wiki lint. Add `--live` to also
+  assert the repo copy still matches the running workflow.
+- **A behaviour change needs a test.** The bar is not coverage; it is that every past incident has one
+  test that would have caught it.
+- Do not "raise `max_tokens` for safety" — read the invariant below first; it is a capacity limit.
+
 ## The three operations
 
 ### Ingest
@@ -70,10 +83,12 @@ Health-check periodically:
   [parse-response-node](/project/parse-response-node.md) validates every field. Never assume the
   response matches the shape. Providers with `json_mode: false` never even receive `response_format`,
   so a markdown-fenced answer is normal; `jsonSlice` strips it before parsing.
-- `max_tokens` is **4000** and is a **capacity** parameter, not a safety margin: Groq's free tier counts
+- `max_tokens` is **3000** and is a **capacity** parameter, not a safety margin: Groq's free tier counts
   `prompt + max_tokens` against one 8000 tokens-per-minute window *before* generating, so an oversized
-  ceiling is a `413`, never a truncated answer. At today's ~3400-token prompt that leaves 602 tokens of
-  headroom — **if the candidate list grows, lower `max_tokens` first**. It is also the reasoning budget.
+  ceiling is a `413`, never a truncated answer. Size it against the **worst-case** prompt (30 candidates ×
+  300-char captions ≈ 4600 tokens), not the observed one — 4000 passed in production and still would have
+  failed on a long-caption day. `tests/build-request.test.mjs` asserts this; it is also the reasoning
+  budget (measured need: 805 tokens).
 - Schedule: **daily 06:00** Europe/Berlin (Schedule node "Every day 06:00").
 - Recipient and sender: configured in the Config node and the Gmail credential.
 - The hashtag-counts branch must **never** be gated on `Has picks?` — today's totals are written even on

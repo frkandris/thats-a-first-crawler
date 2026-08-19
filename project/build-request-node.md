@@ -51,7 +51,7 @@ See [ranking-algorithm](/project/ranking-algorithm.md) and [email-format](/proje
 
 ```js
 model: 'openai/gpt-oss-120b',
-max_tokens: 4000,
+max_tokens: 3000,
 reasoning_effort: 'low',
 stream: false,
 response_format: { type: 'json_object' },
@@ -60,12 +60,13 @@ response_format: { type: 'json_object' },
 - **`model: 'openai/gpt-oss-120b'`** — chosen by measurement against the real 30-candidate request, not
   by leaderboard: the 20b is faster and scores higher elsewhere but drifts out of Hungarian and drops the
   line format; qwen fails JSON mode outright ([groq](/tech/groq.md)).
-- **`max_tokens: 4000`.** Groq's free tier bills `prompt + max_tokens` against **one 8000 TPM window,
-  before generating**, so the ceiling is not free headroom — `max_tokens: 8000` was a flat `413`. At a
-  ~3400-token prompt, 4000 is the largest ceiling that still leaves the prompt room to grow. It doubles
-  as the reasoning budget, which is what an empty answer costs when it runs out
+- **`max_tokens: 3000`.** Groq's free tier bills `prompt + max_tokens` against **one 8000 TPM window,
+  before generating**, so the ceiling is not free headroom — `max_tokens: 8000` was a flat `413`. Size it
+  against the **worst case this node can produce**: 30 candidates × 300-char captions ≈ 4600 tokens, so
+  4000 would have failed on a long-caption day, and did not only because the observed prompt was 3400.
+  A [test](/format/engineering-practices.md) now asserts the arithmetic. It doubles as the reasoning
+  budget, which is what an empty answer costs when it runs out
   ([deepseek-api](/tech/deepseek-api.md#thinking)). Measured completion: 805 tokens.
-  **If the candidate list grows, this number must come down** — see [groq](/tech/groq.md#tpm).
 - **`reasoning_effort: 'low'`** — `medium` spent 60% more tokens and returned *worse* picks (a duplicate
   activity and a self-contradicting line). Selection against explicit criteria does not reward
   deliberation.

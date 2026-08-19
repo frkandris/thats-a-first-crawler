@@ -296,3 +296,23 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
 - **Not yet verified:** the switch is measured at the API level but **has never run inside the workflow**.
   The 06:00 run on 2026-08-20 is the proof; the morning check in [runbook](/project/runbook.md) applies,
   minus `x_router` (the model is pinned now).
+- **Ingest** — **Engineering practices implemented as running commands**
+  ([engineering-practices](/format/engineering-practices.md)), from Google's eng-practices and
+  martinfowler.com. The gap they exposed: the pipeline's logic lived **only inside the n8n UI** — no diff,
+  no review, no test, which is exactly how the dedup incident stayed invisible for weeks.
+  - `scripts/sync_nodes.py` mirrors the live Code nodes into `nodes/*.js` (`--check` fails on drift). n8n
+    stays the system of record; the repo gains history.
+  - `tests/*.test.mjs` + `tests/harness.mjs` run the **real node source** in a fake n8n runtime — 24 tests,
+    under a second, no secrets. Each one encodes a past or plausible incident, not coverage for its own sake.
+  - `scripts/lint_wiki.py` turns the CLAUDE.md "Lint" operation into code: frontmatter, broken links,
+    orphans, README badge, stale timestamps, and **invariant drift measured against `nodes/`**, not against
+    prose. The first prose-regex version was scrapped for crying wolf on legitimate history
+    ("`max_tokens: 8000` was a flat 413") — a linter that is ignored is worse than none.
+  - `scripts/check.sh` is the one-command build; `.github/workflows/ci.yml` runs it on every push. The
+    live-drift check stays manual on purpose: CI holding a production API key is the worse trade.
+- **Ingest** — **The new tests found a real defect on their first run.** `max_tokens: 4000`, shipped that
+  morning, is unsafe: `Build request` can emit 30 candidates × 300-char captions ≈ **4600 prompt tokens**,
+  and 4600 + 4000 > Groq's 8000 TPM window — a `413`, not a truncated answer. It passed in production only
+  because that day's captions were short. **Lowered to 3000** in the live workflow (worst case 4571 + 3000
+  = 7571, headroom 429; measured need 805). The lesson is in [groq](/tech/groq.md#tpm): *size a token
+  ceiling against the worst prompt the code can build, not the one you happened to measure.*

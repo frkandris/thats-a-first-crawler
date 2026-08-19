@@ -1,0 +1,27 @@
+name: check
+
+# Every push and PR. The suite needs no secrets and no network, so it runs in
+# seconds — which is the point: a build people wait for is a build people skip.
+# The live-workflow drift check (scripts/check.sh --live) is deliberately NOT
+# here: it needs the n8n API key, and a CI job that can rewrite production is a
+# worse trade than running that check by hand before a release.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2        # lint_wiki.py inspects the last commit's files
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: bash scripts/check.sh
