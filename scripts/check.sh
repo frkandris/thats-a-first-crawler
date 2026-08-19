@@ -10,6 +10,8 @@ cd "$(dirname "$0")/.."
 if [[ "${1:-}" == "--live" ]]; then
   echo "==> node drift (repo vs live n8n workflow)"
   python3 scripts/sync_nodes.py --check
+  echo "==> workflow wiring"
+  python3 scripts/check_wiring.py
 fi
 
 echo "==> node syntax"

@@ -91,8 +91,11 @@ Health-check periodically:
   budget (measured need: 805 tokens).
 - Schedule: **daily 06:00** Europe/Berlin (Schedule node "Every day 06:00").
 - Recipient and sender: configured in the Config node and the Gmail credential.
-- The hashtag-counts branch must **never** be gated on `Has picks?` — today's totals are written even on
-  no-email days, or the next delta breaks.
+- The hashtag-counts branch must **never** be gated on `Has picks?`, **and must run first**. n8n runs
+  same-output targets in list order, so `Split counts` has to precede the model node in `Build request`'s
+  output list: with the model first, four failed mornings wrote no totals at all and every delta read 0
+  for 11 days. Not being gated on `Has picks?` was necessary but not sufficient.
+  `scripts/check_wiring.py` asserts both.
 - **Any node referenced as `$('X')` must be an ancestor of the referencing node.** n8n runs parallel
   branches at the *end* of a run, so a "parallel read" is empty when the main chain asks for it. Never
   wrap a `$('...')` call in `try/catch` with a default — that hides a wiring bug as legitimate empty

@@ -46,11 +46,17 @@ made them execute at the *end* of the run — after Build request had already tr
 | **Get sent** | Data Table | Read all sent URLs. **In line, `Execute Once`**, ahead of Build request. |
 | **Get counts** | Data Table | Read all hashtag counts. **In line, `Execute Once`**, ahead of Build request. |
 
-## Why the counts branch bypasses `Has picks?`
+## Why the counts branch bypasses `Has picks?` — and runs *first*
 
 **Split counts / Insert count row** hang off **Build request**, not off the Gmail path. Today's totals
 must be recorded even on days when nothing qualifies and no email is sent — otherwise the next day's
 delta silently breaks. See [hashtag-counts-datatable](/project/hashtag-counts-datatable.md).
+
+**Bypassing the gate is not enough: order matters too.** n8n runs the targets of one output in **list
+order**, and a failure stops the run. While the model node sat first in `Build request`'s output list,
+every failed morning (2026-08-15 … 08-19) ended before `Split counts` was reached, so no totals were
+written for 11 days and every delta read `0`. `Split counts` is therefore **first** in that list, ahead of
+the model call, and `scripts/check_wiring.py` fails if that ever flips back.
 
 ## Why the Apify nodes are `Execute Once`
 

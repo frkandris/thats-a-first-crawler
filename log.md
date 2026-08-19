@@ -316,3 +316,21 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   because that day's captions were short. **Lowered to 3000** in the live workflow (worst case 4571 + 3000
   = 7571, headroom 429; measured need 805). The lesson is in [groq](/tech/groq.md#tpm): *size a token
   ceiling against the worst prompt the code can build, not the one you happened to measure.*
+- **Ingest** — **First successful digest in a week** (manual run 06:31 UTC, 64 s, all 16 nodes green,
+  email sent). The Groq path works end to end: `prompt_tokens: 3456` + `max_tokens: 3000` = 6456, inside
+  the 8000 TPM window; `completion_tokens: 479` of which **387 reasoning**; `finish_reason: stop`; no
+  `parseError`. Two picks from 30 candidates after dedup against 183 sent rows.
+- **Ingest** — **The successful run exposed an 11-day-old silent failure.** Every hashtag delta read `0`
+  with `spanDays: 11`. Cause: n8n runs the targets of one output **in list order**, and the model node sat
+  *before* `Split counts` in `Build request`'s output list — so each of the five failed mornings
+  (2026-08-15 … 08-19) ended before the counts write. Verified in the execution data: `Split counts` and
+  `Insert count row` appear in **no** failed run's `runData`.
+  The [CLAUDE.md](/CLAUDE.md) invariant said only *"never gated on `Has picks?`"* — necessary but not
+  sufficient, and the wording gave false confidence. **Fixed** by putting `Split counts` first in the
+  output list, and encoded in the new `scripts/check_wiring.py`, which also asserts the `$('X')`
+  ancestor rule that the [dedup incident](/project/dedup-datatable.md#silent-failure) taught.
+  The missing days cannot be backfilled: Apify reports today's total, not a series.
+- **Lint** — A pattern worth naming: **both of this project's silent failures were graph properties, not
+  code defects.** Unit tests cannot see them, and the n8n canvas renders both wirings identically. That is
+  why `check_wiring.py` exists alongside `tests/` — see
+  [engineering-practices](/format/engineering-practices.md).

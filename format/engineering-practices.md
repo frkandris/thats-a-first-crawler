@@ -33,6 +33,7 @@ no history. Two of this project's worst incidents are direct consequences:
 | Fail the build on any failure | Fowler ("99.9% green is still red") | `check.sh` exits non-zero on the first failing stage; CI runs it on every push |
 | Documentation updated with behaviour | Google, *What to look for* | `scripts/lint_wiki.py` fails when `CLAUDE.md`'s invariants no longer match `nodes/` |
 | Comments say *why*, not *what* | Google | The node comments carry the incident that set each value (`max_tokens`, the `$('Get sent')` throw) |
+| Assert graph properties tests cannot see | — (this project) | `scripts/check_wiring.py`: every `$('X')` must be an ancestor, and `Split counts` must precede the model node. Both encode incidents that were invisible in the n8n canvas |
 | Small, self-contained changes | Google, *Small CLs* | One concern per commit, wiki updates shipped **with** the change that caused them ([CLAUDE.md](/CLAUDE.md)) |
 | Descriptive change messages | Google, *CL descriptions* | First line = what changed; body = *why*, including what was rejected |
 
@@ -43,6 +44,8 @@ Not coverage for its own sake — each test is a past or plausible incident:
 - **`$('Get sent')` missing must throw**, never fall back to "nothing sent yet" (the dedup incident).
 - **Canonical dedup**: `instagram.com/reel/X?igshid=…` and `www.instagram.com/p/X/` are the same post.
 - **The worst-case prompt plus `max_tokens` stays inside Groq's 8000 TPM window** ([groq](/tech/groq.md#tpm)).
+- **The counts branch runs before the model call** — checked in `check_wiring.py`, because a node's own
+  tests cannot see the graph it is wired into ([hashtag-counts-datatable](/project/hashtag-counts-datatable.md)).
 - **The request stays text-only** — no image URL may reach the model body.
 - **Truncation is distinguishable from an empty selection** (`finish_reason: length` + empty content).
 - **A fenced or prose-wrapped answer still parses** ([jsonSlice](/project/parse-response-node.md#jsonslice)).

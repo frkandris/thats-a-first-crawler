@@ -4,7 +4,7 @@ title: Hashtag counts Data Table
 description: The n8n Data Table that stores each hashtag's total post count per day so the email can show the day-over-day delta.
 resource: https://<n8n-host>/projects/<project-id>/datatables/<table-id>
 tags: [datatable, hashtags, metrics, storage]
-timestamp: 2026-08-07T00:00:00Z
+timestamp: 2026-08-19T00:00:00Z
 ---
 
 An [n8n](/tech/n8n.md) **Data Table** named `thats_a_first_hashtag_counts`. It exists so the digest can
@@ -40,6 +40,19 @@ posts. See [decisions](/project/decisions.md#hashtag-delta).
 Today's rows are written on a branch that is **independent of `Has picks?`** — they must be stored even
 on days when no email goes out. If the write were gated on a successful send, a single no-pick day would
 break the following day's delta. See [pipeline](/project/pipeline.md).
+
+**Independence was not enough.** n8n runs the targets of one output in list order and a failure ends the
+run, so while the model node sat *before* `Split counts` in `Build request`'s output list, a failing model
+call also killed the counts write. That is exactly what happened between **2026-08-15 and 08-19**: five
+consecutive failed mornings (DeepSeek `402`, then the router `502`) wrote **no rows at all**, so the
+2026-08-19 digest compared against an 11-day-old total and every delta clamped to `0`.
+
+The fix is ordering: `Split counts` is now **first** in that output list, so the totals are written before
+anything that can fail. `scripts/check_wiring.py` asserts it.
+
+**Reading the damage:** the gap is visible as a `spanDays` jump in the email block (`11 nap alatt`). The
+missing days cannot be backfilled — Apify's analytics actor reports *today's* total, not a historical
+series — so the delta stays coarse until the next clean day.
 
 ## Edge cases
 
