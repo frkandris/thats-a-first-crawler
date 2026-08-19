@@ -4,11 +4,10 @@ title: Parse response node
 description: Validates the model's JSON response, scores and sorts the picks deterministically, and renders the email HTML including the hashtag delta block.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [code, n8n, ranking, html, llm]
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-19T00:00:00Z
 ---
 
-An [n8n](/tech/n8n.md) Code node after the **AI - Meetapedia router** HTTP node
-([meetapedia-router](/tech/meetapedia-router.md)). It owns the
+An [n8n](/tech/n8n.md) Code node after the **AI - Groq** HTTP node ([groq](/tech/groq.md)). It owns the
 [ranking](/project/ranking-algorithm.md) and the [email rendering](/project/email-format.md).
 Named **Parse response** (it was "Parse Claude" until the 2026-08-07 model switch); the name survived the
 2026-08-18 router switch untouched, and so did every field it reads — the gateway speaks the same OpenAI
@@ -41,8 +40,13 @@ models routinely answer inside a ```` ```json ```` fence or wrap the object in a
 `JSON.parse` rejects outright.
 
 `jsonSlice()` therefore strips a leading/trailing fence and cuts to the **outermost braces**
-(`indexOf('{')` … `lastIndexOf('}')`) before parsing. On a clean `json_object` answer it is a no-op, so
-the DeepSeek fallback path is unaffected. A parse failure still degrades to zero picks — it does not throw.
+(`indexOf('{')` … `lastIndexOf('}')`) before parsing. On a clean `json_object` answer it is a no-op.
+
+Since the 2026-08-19 move to [Groq](/tech/groq.md) it is **belt-and-braces rather than load-bearing**:
+Groq enforces JSON mode server-side and rejects the request (`json_validate_failed`) instead of returning
+prose, and no fenced answer was observed from the gpt-oss models. Keep it anyway — it costs nothing,
+model catalogues move, and the failure it prevents is a silent zero-pick morning. A parse failure still
+degrades to zero picks; it does not throw.
 
 ## Validation rules (why this step exists)
 

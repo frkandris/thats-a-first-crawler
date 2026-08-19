@@ -6,7 +6,8 @@ Parent: [/index.md](/index.md).
 ## Pipeline stack
 - [n8n](/tech/n8n.md) — automation platform; Code nodes, Data Tables, publish/schedule.
 - [apify](/tech/apify.md) — IG & TikTok scrapers, hashtag analytics actor, run-sync API, plan limits.
-- [meetapedia-router](/tech/meetapedia-router.md) — free-tier LLM gateway (OpenAI-compatible); `auto` routing, quota, errors.
+- [groq](/tech/groq.md) — the digest's LLM: free tier, TPM limit, measured model choice.
+- [meetapedia-router](/tech/meetapedia-router.md) — *superseded for the digest*; shared free-tier gateway, quota, errors.
 - [deepseek-api](/tech/deepseek-api.md) — *superseded* paid chat API, kept as the fallback; JSON mode, pricing.
 - [wsrv-image-proxy](/tech/wsrv-image-proxy.md) — makes CDN images render in email.
 

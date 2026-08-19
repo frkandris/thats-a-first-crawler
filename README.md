@@ -5,7 +5,7 @@
 ![runs on: n8n](https://img.shields.io/badge/runs%20on-n8n-EA4B71)
 ![LLM: free-tier router](https://img.shields.io/badge/LLM-free--tier%20router-2ea44f)
 ![status: live daily 06:00](https://img.shields.io/badge/status-live%20daily%2006%3A00-brightgreen)
-![docs: 23 concept pages](https://img.shields.io/badge/docs-23%20concept%20pages-blue)
+![docs: 24 concept pages](https://img.shields.io/badge/docs-24%20concept%20pages-blue)
 
 An **LLM-maintained knowledge base** for STRT's *"That's a First Digest"* project — a daily
 [n8n](/tech/n8n.md) workflow that scrapes Instagram/TikTok and emails a Hungarian digest of people
@@ -31,7 +31,7 @@ README.md   CLAUDE.md (schema)   index.md   log.md
 project/   overview · website · pipeline · ranking-algorithm · email-format ·
            build-request-node · parse-response-node · dedup-datatable ·
            hashtag-counts-datatable · credentials · runbook · decisions
-tech/      n8n · apify · meetapedia-router · deepseek-api · wsrv-image-proxy ·
+tech/      n8n · apify · groq · meetapedia-router · deepseek-api · wsrv-image-proxy ·
            nextjs · node-sqlite · newsletter-delivery · pdfkit
 format/    okf · llm-wiki-pattern
 ```

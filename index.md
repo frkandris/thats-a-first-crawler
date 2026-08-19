@@ -20,7 +20,8 @@ and [log.md](/log.md) for history.
 ## Tech — reusable knowledge
 - [n8n](/tech/n8n.md) — the automation platform, Code nodes, Data Tables, publish/schedule.
 - [apify](/tech/apify.md) — Instagram & TikTok scrapers, hashtag analytics, run-sync API, plan limits.
-- [meetapedia-router](/tech/meetapedia-router.md) — the free-tier LLM gateway the digest calls; `auto` routing, quotas, errors.
+- [groq](/tech/groq.md) — the free-tier API behind the daily call; the tokens-per-minute limit and the measured model choice.
+- [meetapedia-router](/tech/meetapedia-router.md) — *superseded for the digest*; the shared free-tier gateway and why a daily call cannot share it.
 - [deepseek-api](/tech/deepseek-api.md) — *superseded* paid chat API, kept as the documented fallback; JSON mode and pricing.
 - [wsrv-image-proxy](/tech/wsrv-image-proxy.md) — wsrv.nl proxy that makes CDN images render in email.
 - [nextjs](/tech/nextjs.md) — Next.js 16 App Router, `proxy.ts`, rewrites, async params.

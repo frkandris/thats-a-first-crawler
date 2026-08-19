@@ -270,3 +270,29 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   called the disabled DeepSeek node a "guaranteed" fallback worth ~$0.09/month. It is not — that account
   has been `402` since 2026-08-15. The runbook gains a 402 row, and the general lesson: **a standby that
   is never exercised is not a fallback.**
+- **Ingest** — **The digest moves to its own free Groq key** ([groq](/tech/groq.md), ADR in
+  [decisions](/project/decisions.md#own-groq-key)). Live workflow: the `AI - Meetapedia router` node was
+  renamed **`AI - Groq`** and re-pointed at `api.groq.com/openai/v1/chat/completions` with a new
+  `Groq header` credential (nothing references it via `$('…')`, asserted before renaming); `Build request`
+  now sends `model: 'openai/gpt-oss-120b'`, `max_tokens: 4000`, `reasoning_effort: 'low'`.
+  **The model was picked by replaying the real 30-candidate body** from that morning's failed run against
+  four configurations — a synthetic prompt had rated them all acceptable, the real one separated them:
+  `gpt-oss-120b`/`low` kept the Hungarian line format (805 completion tokens, 2.0 s); `gpt-oss-20b` drifted
+  into English and dropped the `- N like, N komment` suffix *despite* scoring higher on Meetapedia's own
+  leaderboard; `qwen3.6-27b` returned `json_validate_failed`; `medium` effort spent 60% more tokens for a
+  duplicate pick and a self-contradicting line.
+- **Ingest** — **`max_tokens` is a capacity parameter on Groq, not a safety margin.** The free tier counts
+  `prompt + max_tokens` against one **8000 tokens-per-minute** window *before* generating, so the
+  inherited 8000 ceiling was a flat `413 Request too large` — no answer at all, and no retry can help.
+  4000 is the largest ceiling that still leaves the ~3400-token prompt room to grow; promoted to a
+  ground-truth invariant in [CLAUDE.md](/CLAUDE.md) because the next person to "raise it for safety" will
+  break the run. Code comments in the node were rewritten to say this too — they still described the
+  router.
+- **Lint** — [meetapedia-router](/tech/meetapedia-router.md) marked superseded *for the digest* and kept:
+  it works, and stays the documented way to reach the whole free fleet from any OpenAI client. The
+  `Meetapedia router header` credential is likewise kept, unused. Security: the Groq key was pasted into
+  a chat on 2026-08-19 and must be rotated, same as the DeepSeek key on 2026-08-07 —
+  [credentials](/project/credentials.md).
+- **Not yet verified:** the switch is measured at the API level but **has never run inside the workflow**.
+  The 06:00 run on 2026-08-20 is the proof; the morning check in [runbook](/project/runbook.md) applies,
+  minus `x_router` (the model is pinned now).

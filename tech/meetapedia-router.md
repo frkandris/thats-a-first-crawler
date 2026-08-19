@@ -1,13 +1,19 @@
 ---
 type: Tool
 title: Meetapedia router gateway
-description: The OpenAI-compatible LLM gateway that routes the digest's one daily call across six free-tier providers, replacing the paid DeepSeek call.
+description: SUPERSEDED for the digest 2026-08-19 — the OpenAI-compatible gateway over six free-tier providers; still the right tool for jobs that can tolerate scheduling, but not for a fixed-minute daily call.
 resource: https://meetapedia.com/v1
 tags: [llm, api, gateway, openai-compatible, free-tier, router]
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-19T00:00:00Z
 ---
 
-Selection + parameter extraction is **one text-only chat call** to the Meetapedia router gateway,
+> **The digest stopped calling this on 2026-08-19**, after exactly one scheduled run through it. Not
+> because the gateway is broken — it works — but because a **fixed-minute daily call cannot share
+> per-minute windows with a continuous throughput job**. The digest now uses its own
+> [Groq](/tech/groq.md) key ([decisions](/project/decisions.md#own-groq-key)). Everything below is still
+> accurate and still the fastest way to reach the whole free fleet from any OpenAI client.
+
+Selection + parameter extraction *was* **one text-only chat call** to the Meetapedia router gateway,
 assembled by [build-request-node](/project/build-request-node.md) and parsed by
 [parse-response-node](/project/parse-response-node.md). It replaced the direct
 [DeepSeek](/tech/deepseek-api.md) call on **2026-08-18** — see
@@ -78,9 +84,14 @@ rather than in a night block.
 **So "one call a day is negligible" is true about volume and false about availability.** The digest is
 not a heavy consumer; it is a *late* one. Its call lands at 06:00 Europe/Berlin = **04:00 UTC**, four
 hours after the ledger's midnight-UTC rollover and therefore behind whatever the crawler already took.
-The gateway has **no per-key quota** — its own documentation names this as the feature to add when one
-consumer starves another, which is exactly this case. Nothing about the digest's configuration can fix
-it from this side; see [decisions](/project/decisions.md#meetapedia-router) for the options.
+
+**And the daily ledger was not even the real limit.** The next morning (2026-08-19, 08:00 UTC) the same
+call failed in 0.27 s with `groq remaining=13380` and `gemini remaining=1099` — both `blocked`. The
+crawler's continuous worker keeps every provider inside its **per-minute** window, so an outside caller
+finds the door shut regardless of daily budget. The gateway has **no per-key quota** — its own
+documentation names this as the feature to add when one consumer starves another, and this is that case.
+Nothing on the digest's side can fix it, which is why the digest left; see
+[decisions](/project/decisions.md#own-groq-key).
 
 ## <a id="json"></a>JSON mode is best-effort here
 

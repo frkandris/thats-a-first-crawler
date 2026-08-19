@@ -61,16 +61,19 @@ Health-check periodically:
 
 ## Ground-truth invariants (guard against drift)
 
-- Model: `auto` via `meetapedia.com/v1/chat/completions`, **text-only** (since 2026-08-18). `auto` is a
-  routing policy over free-tier providers, not a model name — *which* model answers is in the response's
-  `x_router` field and changes run to run. The paid `deepseek-v4-pro` node is disabled, not deleted.
+- Model: `openai/gpt-oss-120b` via `api.groq.com/openai/v1/chat/completions` on **our own free-tier key**,
+  **text-only** (since 2026-08-19). Pinned deliberately and chosen by measurement against the real
+  request. The shared Meetapedia gateway (2026-08-18) and the paid DeepSeek node are both disabled but
+  documented; neither is a working fallback today.
 - No images are sent to any model. Image URLs exist only for email rendering (wsrv proxy).
 - **No JSON Schema anywhere in the fleet** — the shape is a literal example in the prompt, and
   [parse-response-node](/project/parse-response-node.md) validates every field. Never assume the
   response matches the shape. Providers with `json_mode: false` never even receive `response_format`,
   so a markdown-fenced answer is normal; `jsonSlice` strips it before parsing.
-- `max_tokens` is **8000** and must not exceed 8192 — part of the free fleet rejects a larger ceiling.
-  It is a *reasoning* budget, not an output-size one.
+- `max_tokens` is **4000** and is a **capacity** parameter, not a safety margin: Groq's free tier counts
+  `prompt + max_tokens` against one 8000 tokens-per-minute window *before* generating, so an oversized
+  ceiling is a `413`, never a truncated answer. At today's ~3400-token prompt that leaves 602 tokens of
+  headroom — **if the candidate list grows, lower `max_tokens` first**. It is also the reasoning budget.
 - Schedule: **daily 06:00** Europe/Berlin (Schedule node "Every day 06:00").
 - Recipient and sender: configured in the Config node and the Gmail credential.
 - The hashtag-counts branch must **never** be gated on `Has picks?` — today's totals are written even on
@@ -79,4 +82,5 @@ Health-check periodically:
   branches at the *end* of a run, so a "parallel read" is empty when the main chain asks for it. Never
   wrap a `$('...')` call in `try/catch` with a default — that hides a wiring bug as legitimate empty
   data, which is exactly how dedup stayed broken for weeks.
-- Secrets (Apify token, `ROUTER_API_KEY`, DeepSeek key) are never printed; the human pastes them into n8n.
+- Secrets (Apify token, `GROQ_API_KEY`, `ROUTER_API_KEY`, DeepSeek key) are never printed. Any key that
+  reaches a chat transcript is compromised and must be rotated — this has happened twice.

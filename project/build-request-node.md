@@ -1,15 +1,15 @@
 ---
 type: Code Node
 title: Build request node
-description: Normalizes IG/TikTok candidates, filters and dedups, computes the hashtag deltas, and assembles the text-only chat request sent to the Meetapedia router.
+description: Normalizes IG/TikTok candidates, filters and dedups, computes the hashtag deltas, and assembles the text-only chat request sent to Groq.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [code, n8n, llm, hashtags]
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-19T00:00:00Z
 ---
 
 An [n8n](/tech/n8n.md) Code node ("Run Once for All Items"). It turns raw
-[Apify](/tech/apify.md) output into an OpenAI-shaped chat request body for the
-[Meetapedia router](/tech/meetapedia-router.md).
+[Apify](/tech/apify.md) output into an OpenAI-shaped chat request body for
+[Groq](/tech/groq.md).
 
 ## Steps
 
@@ -50,30 +50,34 @@ See [ranking-algorithm](/project/ranking-algorithm.md) and [email-format](/proje
 ## The request body
 
 ```js
-model: 'auto',        // a routing POLICY, not a model name
-max_tokens: 8000,
+model: 'openai/gpt-oss-120b',
+max_tokens: 4000,
+reasoning_effort: 'low',
 stream: false,
 response_format: { type: 'json_object' },
 ```
 
-- **`model: 'auto'`** lets the [router](/tech/meetapedia-router.md) pick the best free model that still
-  has daily quota. Pin `provider:model` only when a run must be reproducible — that trades the free-tier
-  failover away for a 429.
-- **`max_tokens: 8000`**, down from 16000 on 2026-08-18. The ceiling exists for *reasoning* tokens, not
-  output size: the answer is a handful of picks, but thinking models (`deepseek-v4-pro`, `gpt-oss`) draw
-  their reasoning from the same budget and at 4000 the first live run returned empty content
-  ([deepseek-api](/tech/deepseek-api.md#thinking)). 16000 is not safe across the fleet — Gemini's free
-  tier caps output at 8192 and rejects a larger ceiling outright.
+- **`model: 'openai/gpt-oss-120b'`** — chosen by measurement against the real 30-candidate request, not
+  by leaderboard: the 20b is faster and scores higher elsewhere but drifts out of Hungarian and drops the
+  line format; qwen fails JSON mode outright ([groq](/tech/groq.md)).
+- **`max_tokens: 4000`.** Groq's free tier bills `prompt + max_tokens` against **one 8000 TPM window,
+  before generating**, so the ceiling is not free headroom — `max_tokens: 8000` was a flat `413`. At a
+  ~3400-token prompt, 4000 is the largest ceiling that still leaves the prompt room to grow. It doubles
+  as the reasoning budget, which is what an empty answer costs when it runs out
+  ([deepseek-api](/tech/deepseek-api.md#thinking)). Measured completion: 805 tokens.
+  **If the candidate list grows, this number must come down** — see [groq](/tech/groq.md#tpm).
+- **`reasoning_effort: 'low'`** — `medium` spent 60% more tokens and returned *worse* picks (a duplicate
+  activity and a self-contradicting line). Selection against explicit criteria does not reward
+  deliberation.
 
 ## JSON output is prompt-enforced, not schema-enforced
 
-No provider in the fleet offers a JSON Schema, and several do not accept `response_format` at all — for
-those the gateway **drops the field silently** ([meetapedia-router](/tech/meetapedia-router.md#json)).
-Therefore:
+Groq honours `response_format: {"type":"json_object"}` but offers **no JSON Schema**, so the shape is
+still the prompt's job. Therefore:
 
 - The system prompt **must contain the word "json"** and a literal example of the target object:
-  `{"picks":[{"index":0,"line":"…","csoportos":true,"oktatos":false,"felnott":true}]}`. Since 2026-08-18
-  this example is load-bearing twice over: it is the *only* instruction a `json_mode: false` provider gets.
+  `{"picks":[{"index":0,"line":"…","csoportos":true,"oktatos":false,"felnott":true}]}`. It is what keeps
+  the model's output shape stable across a model change — it survived Claude → DeepSeek → gpt-oss.
 - All validation happens downstream in [parse-response-node](/project/parse-response-node.md), which also
   strips a markdown fence before parsing.
 

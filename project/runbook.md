@@ -4,7 +4,7 @@ title: Runbook
 description: How to operate, test, and troubleshoot the digest workflow.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [operations, runbook, troubleshooting]
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-19T00:00:00Z
 ---
 
 Operational guide for [That's a First Digest](/project/thats-a-first-digest.md).
@@ -21,9 +21,9 @@ Open the workflow in [n8n](/tech/n8n.md) → **Execute workflow**. A full run is
 (Apify scrape + hashtag stats + one text-only [router](/tech/meetapedia-router.md) call). It got noticeably
 faster on 2026-08-07: the ~15 image downloads and the vision call are gone. Check the new email in Gmail.
 
-**Which model answered?** Open the **AI - Meetapedia router** node's output and read `x_router`
-(`provider`, `model`, `quality`). With `model: 'auto'` this changes run to run — a digest that suddenly
-reads worse is a routing question before it is a prompt question.
+**Which model answered?** Since 2026-08-19 it is always `openai/gpt-oss-120b` on our own
+[Groq](/tech/groq.md) key — pinned deliberately, so a change in digest quality is a prompt or data
+question, not a routing one.
 
 **Publishing:** a `PUT /api/v1/workflows/{id}` on an **active** workflow lands as the *published* version —
 after the 2026-08-18 API writes the editor's Version History showed `Current changes (Published)` stamped
@@ -50,7 +50,10 @@ then **Publish** to activate. See [build-request-node](/project/build-request-no
 | `JSON.parse` error in Parse response | prompt lost the literal "json" example, or the answer was truncated. A markdown fence is **not** a cause any more — `jsonSlice` strips it ([parse-response-node](/project/parse-response-node.md#jsonslice)) | restore the example in the system prompt; check `raw` on the parse output to see what the model actually sent |
 | Picks have wrong/missing fields | no server-side schema anywhere in the fleet; a `json_mode: false` provider does not even get `response_format` | validation/coercion in [parse-response-node](/project/parse-response-node.md) handles it; check `x_router` for which model, tighten the prompt example if it persists |
 | Any model node: **402** `Payment required` | the vendor account is out of credit. **Silent for four days** on DeepSeek (2026-08-15 → 08-18): the run failed at 04:00 and nobody watches a workflow that fails before it emails | top up the vendor account. This is why a standby must be exercised, not just wired |
-| **AI - Meetapedia router** returns **401** `invalid_api_key` | the `Meetapedia router header` credential holds a placeholder, or the key is not in the gateway's `ROUTER_API_KEY` allowlist | paste the real key into the n8n credential; verify with `curl -H "Authorization: Bearer <key>" https://meetapedia.com/v1/models` |
+| **AI - Groq**: **413** `Request too large … tokens per minute (TPM): Limit 8000` | `prompt + max_tokens` exceeded the free tier's per-minute window. Groq counts the *ceiling*, not the answer, so this fails before generating and **retries cannot help** | lower `max_tokens` in Build request (currently 4000 against a ~3400-token prompt) — the arithmetic is in [groq](/tech/groq.md#tpm). Usually means the candidate list or captions grew |
+| **AI - Groq**: **400** `json_validate_failed` | the model could not hold `response_format: json_object`. Observed on `qwen/qwen3.6-27b`, never on gpt-oss | do not switch models casually; re-measure with the real request body first ([groq](/tech/groq.md)) |
+| **AI - Groq**: **404** `model_not_found` / `model_decommissioned` | Groq retired the model name. It fails *every* run, not some | `curl -H "Authorization: Bearer <key>" https://api.groq.com/openai/v1/models` and pick a live one; re-measure before committing to it |
+| **AI - Groq** returns **401** | the `Groq header` credential is wrong or the key was rotated | paste the current key; verify with the `/models` call above |
 | **429** `quota_exhausted` / **502** `all providers rate limited` | every free provider is out of *daily* budget. **Expected to happen sometimes**: the Meetapedia crawler shares the ledger and had spent the whole day's capacity by 11:52 UTC on 2026-08-18 | `GET /v1/quota` shows per-provider `remaining`. A retry does not help — the budget is daily. Options, in order: wait for the next midnight-UTC rollover; add a per-key quota in the gateway; enable the DeepSeek standby. See [decisions](/project/decisions.md#meetapedia-router) |
 | **429** `rate_limited` / **502** `upstream_unavailable` | a per-minute window or a provider hiccup | the node retries 3× at 5 s and the router picks another provider; nothing to do unless it fails all three |
 | **503** `router_disabled` | the Meetapedia deploy has `router.enabled: false` or no provider keys | operator fix in that project; meanwhile use the DeepSeek standby |

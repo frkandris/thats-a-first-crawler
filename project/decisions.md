@@ -4,7 +4,7 @@ title: Design decisions
 description: Why the system is built the way it is — the non-obvious choices and what forced them.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [decisions, adr, rationale]
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-19T00:00:00Z
 ---
 
 Non-obvious choices, newest context on top. Each is a small ADR.
@@ -79,6 +79,21 @@ free, and currently not even paid up).
 The router work is **not wasted**: it proved the free-tier path end to end, and
 [meetapedia-router](/tech/meetapedia-router.md) stays as the documented way to reach a whole fleet when
 a job can tolerate scheduling.
+
+**The model was chosen by measurement, on the real request.** The 30-candidate body from that morning's
+failed run was replayed against every plausible Groq model
+([groq](/tech/groq.md)): `gpt-oss-120b` holds the Hungarian line format, `gpt-oss-20b` drifts into
+English and drops the engagement suffix despite scoring *higher* on Meetapedia's own leaderboard, and
+`qwen3.6-27b` cannot hold JSON mode at all. `reasoning_effort: 'low'` beat `'medium'`, which spent 60%
+more tokens to return a duplicate pick and a self-contradicting line. Replaying the **real** body is what
+made this decidable — a synthetic three-candidate prompt had ranked them all as equally fine.
+
+**The binding limit is tokens-per-minute, and it reshaped the request.** Groq's free tier counts
+`prompt + max_tokens` against an 8000 TPM window *before* generating, so the inherited `max_tokens: 8000`
+was a flat `413` — not a truncated answer, no answer. At a ~3400-token prompt the ceiling is now **4000**,
+which is the largest value that still leaves the prompt room to grow. This makes `max_tokens` a
+**capacity** parameter here, not just a safety margin, and it is the first thing to lower if the
+candidate list ever grows.
 
 ## <a id="deepseek"></a>DeepSeek chat instead of Claude vision (2026-08-07)
 The user moved the workflow to the **DeepSeek API** and dropped image analysis: *"nem érdekel a
