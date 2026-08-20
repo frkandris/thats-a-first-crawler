@@ -33,7 +33,7 @@ no history. Two of this project's worst incidents are direct consequences:
 | Fail the build on any failure | Fowler ("99.9% green is still red") | `check.sh` exits non-zero on the first failing stage; CI runs it on every push |
 | Documentation updated with behaviour | Google, *What to look for* | `scripts/lint_wiki.py` fails when `CLAUDE.md`'s invariants no longer match `nodes/` |
 | Comments say *why*, not *what* | Google | The node comments carry the incident that set each value (`max_tokens`, the `$('Get sent')` throw) |
-| Assert graph properties tests cannot see | — (this project) | `scripts/check_wiring.py`: every `$('X')` must be an ancestor, and `Split counts` must precede the model node. Both encode incidents that were invisible in the n8n canvas |
+| Assert graph properties tests cannot see | — (this project) | `scripts/check_wiring.py`: every `$('X')` must be an ancestor, the dedup write must stay downstream of the send, and any must-survive branch must precede the node that can fail. All encode incidents invisible in the n8n canvas |
 | Small, self-contained changes | Google, *Small CLs* | One concern per commit, wiki updates shipped **with** the change that caused them ([CLAUDE.md](/CLAUDE.md)) |
 | Descriptive change messages | Google, *CL descriptions* | First line = what changed; body = *why*, including what was rejected |
 
@@ -44,8 +44,9 @@ Not coverage for its own sake — each test is a past or plausible incident:
 - **`$('Get sent')` missing must throw**, never fall back to "nothing sent yet" (the dedup incident).
 - **Canonical dedup**: `instagram.com/reel/X?igshid=…` and `www.instagram.com/p/X/` are the same post.
 - **The worst-case prompt plus `max_tokens` stays inside Groq's 8000 TPM window** ([groq](/tech/groq.md#tpm)).
-- **The counts branch runs before the model call** — checked in `check_wiring.py`, because a node's own
-  tests cannot see the graph it is wired into ([hashtag-counts-datatable](/project/hashtag-counts-datatable.md)).
+- **The dedup write stays downstream of the send** — checked in `check_wiring.py`, because a node's own
+  tests cannot see the graph it is wired into. (The branch-ordering rule it replaced retired with the
+  [hashtag counts](/project/decisions.md#drop-hashtag-counts), but the check remains for the next branch.)
 - **The request stays text-only** — no image URL may reach the model body.
 - **Truncation is distinguishable from an empty selection** (`finish_reason: length` + empty content).
 - **A fenced or prose-wrapped answer still parses** ([jsonSlice](/project/parse-response-node.md#jsonslice)).
@@ -72,4 +73,6 @@ Not coverage for its own sake — each test is a past or plausible incident:
 3. `bash scripts/check.sh` — tests and lint must pass.
 4. Commit the node change **and** the wiki update together.
 
-Editing `nodes/*.js` by hand is a dead end: the file header says so, and the next sync overwrites it.
+Editing `nodes/*.js` by hand is a dead end: the file header says so, and the next sync overwrites it —
+or deletes it, if the node is gone from n8n. That deletion path was added on 2026-08-20, when removing the
+hashtag nodes left `split-counts.js` behind: a stale mirror keeps being tested and read as if it still ran.

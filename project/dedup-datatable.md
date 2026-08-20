@@ -4,7 +4,7 @@ title: Dedup Data Table
 description: The n8n Data Table that records already-sent posts so the digest never repeats an item.
 resource: https://<n8n-host>/projects/<project-id>/datatables/<table-id>
 tags: [datatable, dedup, storage]
-timestamp: 2026-07-04T00:00:00Z
+timestamp: 2026-08-20T00:00:00Z
 ---
 
 Deduplication uses an [n8n](/tech/n8n.md) **Data Table** named `thats_a_first_sent`.
@@ -22,7 +22,7 @@ Deduplication uses an [n8n](/tech/n8n.md) **Data Table** named `thats_a_first_se
 ## Read / write
 
 - **Get sent** (Data Table, Return All, `Execute Once`) is wired **in line** — `Config → Get sent →
-  Get counts → Apify - Instagram → …` — so it has definitely executed by the time
+  Apify - Instagram → …` — so it has definitely executed by the time
   [build-request-node](/project/build-request-node.md) references it as `$('Get sent')`. It drops any
   candidate whose **canonicalized** URL is already present. Canonicalization (`canon()`: lowercase, strip
   query/fragment, unify Instagram `reel`/`tv` → `p`, drop trailing slash) makes dedup robust to URL-format
@@ -45,7 +45,7 @@ emailed more than once — one TikTok five times (2026-07-17, 07-21, 07-25, 07-2
 running (07-17/18/19). The 2026-08-08 digest repeated **4 of its 5 picks** from 08-07.
 
 Fixed by wiring the readers in line and replacing the `try/catch` with a thrown error naming the cause.
-Build request now also returns `sentRowCount` / `countsRowCount` so an empty read is visible in the run
+Build request now also returns `sentRowCount` so an empty read is visible in the run
 data instead of being invisible.
 
 ## Behavior

@@ -23,13 +23,11 @@ envelope.
 4. **Score** with the formula in [ranking-algorithm](/project/ranking-algorithm.md); dedupe by url
    (keep highest score).
 5. **Sort** by score desc, tie-break engagement desc; take top 5.
-6. **Render** the numbered HTML per [email-format](/project/email-format.md), followed by the
-   [hashtag delta block](/project/email-format.md#hashtag-delta) built from `hashtagStats`.
-7. **Output** `{ picks, html, runDate, candidateCount, hashtagStats }`.
+6. **Render** the numbered HTML per [email-format](/project/email-format.md).
+7. **Output** `{ picks, html, runDate, candidateCount }`.
    - `picks` is consumed by **Split picks** → [dedup table](/project/dedup-datatable.md)
      (`activity` column = `pick.line`).
    - `html` is consumed by the Gmail node.
-   - `hashtagStats` is consumed by **Split counts** → [hashtag counts](/project/hashtag-counts-datatable.md).
 
 ## <a id="jsonslice"></a>`jsonSlice`: the fence strip (2026-08-18)
 
@@ -69,8 +67,8 @@ An empty result is a **normal outcome**, not an error: some days nothing genuine
 
 - `line` from the model carries the description **without** the platform; the platform link is appended
   here so the clickable-link rule is guaranteed in code.
-- If `picks.length === 0`, **Has picks?** stops the run and no email is sent — but the
-  [hashtag counts](/project/hashtag-counts-datatable.md) are still written, because that branch does not
-  pass through **Has picks?**. See [pipeline](/project/pipeline.md).
+- If `picks.length === 0`, **Has picks?** stops the run and no email is sent. Nothing else is written on
+  such a day: the counts branch that used to run regardless was removed on 2026-08-20
+  ([decisions](/project/decisions.md#drop-hashtag-counts)).
 - The picks no longer carry `kepTipus` / `ratirtSzoveg`; those were image-derived and were removed with
   the vision call. See [ranking-algorithm](/project/ranking-algorithm.md).

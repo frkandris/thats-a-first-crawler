@@ -58,15 +58,18 @@ def main():
                 fails.append(f"{node['name']} references $('{ref}') which is not an ancestor "
                              f"— it will read empty at runtime")
 
+    # The hashtag-counts branch was removed on 2026-08-20 (its data source never
+    # moved). If it ever comes back, the ordering rule comes back with it: a
+    # branch that must survive a failed run has to precede the node that fails.
     targets = [c["node"] for c in conns.get("Build request", {}).get("main", [[]])[0] or []]
     if "Split counts" in targets and targets[0] != "Split counts":
-        fails.append("Split counts must be FIRST in Build request's output list, so today's hashtag "
-                     f"totals are written before a model failure can stop the run (now: {targets})")
+        fails.append("Split counts must be FIRST in Build request's output list, so today's totals "
+                     f"are written before a model failure can stop the run (now: {targets})")
 
-    counts_anc = ancestors(conns, "Insert count row")
-    if "Has picks?" in counts_anc:
-        fails.append("the hashtag-counts branch is gated on Has picks? — totals must be written "
-                     "on no-email days too, or the next delta breaks")
+    dedup_anc = ancestors(conns, "Insert row")
+    if "Gmail - send digest" not in dedup_anc:
+        fails.append("the dedup write must stay downstream of the send: a row written before the "
+                     "email goes out would suppress a post that was never sent")
 
     for f in fails:
         print("FAIL " + f)

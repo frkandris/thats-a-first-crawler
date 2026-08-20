@@ -334,3 +334,29 @@ Chronological history of ingests, queries, and lint passes. Newest last. Dates I
   code defects.** Unit tests cannot see them, and the n8n canvas renders both wirings identically. That is
   why `check_wiring.py` exists alongside `tests/` — see
   [engineering-practices](/format/engineering-practices.md).
+
+## 2026-08-20
+
+- **Ingest** — **The scheduled 06:00 run sent a digest on its own** (three picks, correct Hungarian line
+  format) — the first unattended success since 2026-08-12. Groq path confirmed in production.
+- **Query → Ingest** — **The hashtag delta block is removed** ([decisions](/project/decisions.md#drop-hashtag-counts)).
+  The email showed every delta as `—`, and the stored table explained why: **five hashtags, four
+  measurement dates spanning 13 days, not one digit of movement**. Two further findings from the actor's
+  raw output: `postsCount` is **100× too large for `K`-scale tags** (`4094000` beside its own
+  `posts: "40.94 K"`), while `M`-scale tags convert correctly; and `postsPerDay` comes back empty though
+  the actor advertises it. Swapping actors was rejected on evidence, not effort: all three stats actors in
+  the store read the same Instagram page, which publishes a rounded figure, and the account is at
+  $45/$100 for the month — a paid run to test a hypothesis the data already contradicts is a bad trade.
+  **Removed** from the live workflow: `Apify - Hashtag stats`, `Get counts`, `Split counts`,
+  `Insert count row`, the delta computation, the email block, and the now-unread `hashtags[]` config entry.
+  **17 nodes → 13, and the workflow is a single linear chain**; cost drops ~$0.21/month.
+  **Kept:** the data table with its 20 rows — deleting measurements is irreversible and they cost nothing.
+- **Ingest** — `scripts/sync_nodes.py` now **deletes mirrors whose node no longer exists**. Removing the
+  hashtag nodes left `split-counts.js` behind, and a stale mirror keeps being tested and read as if it
+  still ran. `check_wiring.py` traded the retired counts-ordering rule for one that still matters: the
+  dedup write must stay **downstream of the send**, or a post could be marked sent without being sent.
+- **Lint** — Swept every page for present-tense claims about the removed nodes: the `$('Get counts')`
+  ancestor requirement, the in-line chain in [dedup-datatable](/project/dedup-datatable.md), the
+  `countsRowCount` diagnostic, the branch-order note in the DeepSeek rollback row, and the timing trace in
+  [n8n](/tech/n8n.md). Also corrected that rollback row itself: it still described the DeepSeek standby as
+  available, when that account has been `402` since 2026-08-15.

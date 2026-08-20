@@ -42,7 +42,6 @@ if (txt.trim()) {
 const build = $('Build request').first().json;
 const cands = build.cands || [];
 const runDate = build.runDate;
-const hashtagStats = build.hashtagStats || [];
 
 const bool = (v) => v === true || v === 'true' || v === 1;
 
@@ -87,27 +86,9 @@ top.forEach((x, i) => {
   html += block;
 });
 
-// Hashtag delta block — only when at least one hashtag has a comparable
-// previous row, so the very first run does not print a table of dashes.
-const huNum = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-const comparable = hashtagStats.filter(h => !h.first && h.delta !== null);
-if (comparable.length) {
-  const rows = hashtagStats.slice().sort((a,b) => ((b.delta == null ? -1 : b.delta) - (a.delta == null ? -1 : a.delta))).map(h => {
-    let val;
-    if (h.first || h.delta == null) val = '&mdash; (első mérés)';
-    else if (h.delta === 0) val = '&mdash;';
-    else val = huNum(h.delta) + (h.spanDays > 1 ? (' (' + h.spanDays + ' nap alatt)') : '');
-    return '<tr><td style="padding:2px 12px 2px 0">#' + h.hashtag + '</td>'
-      + '<td style="padding:2px 0;text-align:right">' + val + '</td></tr>';
-  }).join('');
-  html += '<hr style="border:0;border-top:1px solid #eee;margin:28px 0 14px 0">'
-    + '<p style="margin:0;color:#888;font-size:13px">Új poszt tegnap óta (Instagram):</p>'
-    + '<table style="border-collapse:collapse;font-size:13px;color:#888;margin-top:6px">' + rows + '</table>';
-}
-
 const picks = top.map(x => ({
   url: x.url, platform: x.platform, line: x.line,
   score: x.score, csoportos: x.csoportos, oktatos: x.oktatos, felnott: x.felnott
 }));
 
-return [ { json: { picks: picks, html: html, runDate: runDate, candidateCount: build.candidateCount, hashtagStats: hashtagStats, finishReason: finishReason, truncated: truncated } } ];
+return [ { json: { picks: picks, html: html, runDate: runDate, candidateCount: build.candidateCount, finishReason: finishReason, truncated: truncated } } ];

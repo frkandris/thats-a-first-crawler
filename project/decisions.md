@@ -4,10 +4,48 @@ title: Design decisions
 description: Why the system is built the way it is — the non-obvious choices and what forced them.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [decisions, adr, rationale]
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-20T00:00:00Z
 ---
 
 Non-obvious choices, newest context on top. Each is a small ADR.
+
+## <a id="drop-hashtag-counts"></a>The hashtag delta block is removed (2026-08-20)
+The block never worked, and the evidence is unambiguous: **the stored totals did not move at all**.
+
+| hashtag | 08-07 | 08-08 | 08-19 | 08-20 |
+|---|---|---|---|---|
+| #thatsafirst | 4 094 000 | 4 094 000 | 4 094 000 | 4 094 000 |
+| #tryingnewthings | 72 278 000 | 72 278 000 | 72 278 000 | 72 278 000 |
+| #tryingsomethingnew | 51 387 000 | 51 387 000 | 51 387 000 | 51 387 000 |
+| #newexperience | 1 010 000 | 1 010 000 | 1 010 000 | 1 010 000 |
+| #newexperiences | 76 622 000 | 76 622 000 | 76 622 000 | 76 622 000 |
+
+Five hashtags, thirteen days, not one digit of movement — so every delta rendered as `—`, for every
+reader, on every day the block appeared.
+
+Two further findings from the actor's raw output:
+
+- **The `postsCount` field is wrong by 100× for `K`-scale tags.** It reports `4094000` next to its own
+  `posts: "40.94 K"` (i.e. 40 940), while the `M`-scale tag converts correctly (`1.01 M` → `1010000`).
+  We were storing bad numbers, hidden by the fact that the delta was always zero.
+- **`postsPerDay` is empty** (`"—"`) and `difficulty` is blank, even though the actor advertises both.
+
+**Rejected: swapping the actor.** The store has only two other stats actors, and *all of them read the
+same Instagram hashtag page*, which publishes a rounded figure (`"40.94 K"`). A different scraper of a
+frozen source returns the same frozen number. Confirming this would have cost a paid run on an account
+already at $45/$100 for the month, to test a hypothesis the data already contradicts. Reconsider only if
+a source with genuine daily counts appears.
+
+**Rejected: counting from our own scrape.** Still capped at 12 posts per hashtag, exactly as when this was
+[first considered](#hashtag-delta) — the cap is what made the stored-total approach necessary in the first
+place.
+
+**Removed:** the `Apify - Hashtag stats`, `Get counts`, `Split counts` and `Insert count row` nodes, the
+delta computation in [build-request-node](/project/build-request-node.md), the block in
+[email-format](/project/email-format.md), and the now-unread `hashtags[]` entry in the Config node. The
+workflow drops from 17 nodes to 13 and becomes a single linear chain; ~$0.21/month and one HTTP round-trip
+go with it. **Kept:** the data table and its 20 rows ([hashtag-counts-datatable](/project/hashtag-counts-datatable.md)) —
+deleting measurements is irreversible, and they cost nothing where they are.
 
 ## <a id="meetapedia-router"></a>Free-tier router instead of the paid DeepSeek call (2026-08-18)
 The user asked to replace the paid model call with the free AI access already built in their other
@@ -116,7 +154,9 @@ képfeldolgozás már, azt kiszedheted belőle, csak a chat"*. Consequences, all
 - **Images stay in the email.** Only the *model* stopped seeing them; the
   [wsrv proxy](/tech/wsrv-image-proxy.md) is untouched.
 
-## <a id="hashtag-delta"></a>Hashtag delta from a stored daily total (2026-08-07)
+## <a id="hashtag-delta"></a>Hashtag delta from a stored daily total (2026-08-07, superseded 2026-08-20)
+> Superseded: the reasoning below is sound, but the data source it depends on turned out to be frozen.
+> See [above](#drop-hashtag-counts).
 The user asked for a block showing how many new posts appeared per hashtag since yesterday. The obvious
 approach — counting fresh posts in what we already scrape — **cannot work**: we deliberately fetch only
 12 posts per hashtag, so any count would cap at 12 and understate the truth.
@@ -150,7 +190,7 @@ its 5 picks; the table then showed 21 URLs sent more than once, going back to mi
 
 Two lessons, both now enforced: **a `$('X')` reference requires X to be an ancestor**, and **never
 `try/catch` a `$('...')` call into a default** — a swallowed wiring error is indistinguishable from
-legitimately empty data. Build request also reports `sentRowCount`/`countsRowCount` now, so the input
+legitimately empty data. Build request also reports `sentRowCount` now, so the input
 size is visible in every run. See [dedup-datatable](/project/dedup-datatable.md#silent-failure) and
 [n8n](/tech/n8n.md#branch-order).
 

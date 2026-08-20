@@ -33,7 +33,20 @@ def slug(name):
 def main():
     check = "--check" in sys.argv
     drift = []
-    for name, code in sorted(fetch_nodes().items()):
+    live = fetch_nodes()
+    # A node deleted in n8n must not linger here: a stale file would keep being
+    # tested and read as if it still ran. Found the hard way when the hashtag
+    # nodes were removed and split-counts.js stayed behind.
+    keep = {slug(n) + ".js" for n in live}
+    for f in sorted(os.listdir(os.path.join(HERE, "nodes"))):
+        if f.endswith(".js") and f not in keep:
+            if check:
+                drift.append(f + " (deleted in n8n)")
+                print(f"  DRIFT      nodes/{f} — node no longer exists")
+            else:
+                os.remove(os.path.join(HERE, "nodes", f))
+                print(f"  removed    nodes/{f} — node no longer exists")
+    for name, code in sorted(live.items()):
         path = os.path.join(HERE, "nodes", slug(name) + ".js")
         want = HEADER.format(name=name) + "\n" + code.rstrip() + "\n"
         have = open(path).read() if os.path.exists(path) else None

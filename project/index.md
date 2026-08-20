@@ -10,7 +10,7 @@ Everything specific to the *That's a First Digest* system. Parent: [/index.md](/
 - [build-request-node](/project/build-request-node.md) — normalize, dedup, hashtag deltas, model request.
 - [parse-response-node](/project/parse-response-node.md) — validate, score, sort, render HTML.
 - [dedup-datatable](/project/dedup-datatable.md) — sent-URL dedup store.
-- [hashtag-counts-datatable](/project/hashtag-counts-datatable.md) — daily hashtag totals for the delta block.
+- [hashtag-counts-datatable](/project/hashtag-counts-datatable.md) — *superseded*; daily hashtag totals, feature removed 2026-08-20.
 - [credentials](/project/credentials.md) — Apify / router / DeepSeek / Gmail.
 - [runbook](/project/runbook.md) — operate, test, troubleshoot.
 - [decisions](/project/decisions.md) — design rationale / ADRs.

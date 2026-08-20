@@ -2,8 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runNodeJson, daysAgo } from './harness.mjs';
 
-const CONFIG = { recipient: 'x@example.com', lookbackDays: 30,
-                 hashtags: ['thatsafirst', 'tryingnewthings'] };
+const CONFIG = { recipient: 'x@example.com', lookbackDays: 30 };
 
 const igPost = (over = {}) => ({
   url: 'https://www.instagram.com/p/AAA111/', caption: 'Ma volt az első fazekas órám',
@@ -12,8 +11,7 @@ const igPost = (over = {}) => ({
 
 const base = (over = {}) => ({
   'Config': [CONFIG], 'Apify - Instagram': [igPost()], 'Apify - TikTok': [],
-  'Apify - Hashtag stats': [{ hashtag: 'thatsafirst', postsCount: 1000 }],
-  'Get sent': [], 'Get counts': [], ...over });
+  'Get sent': [], ...over });
 
 test('assembles a Groq request with the pinned model and budget', () => {
   const out = runNodeJson('build-request', { nodes: base() });
@@ -92,20 +90,10 @@ test('images are proxied for email and never sent to the model', () => {
   assert.ok(!asText.includes('image'), 'the request body must stay text-only');
 });
 
-test('hashtag deltas clamp negatives to zero and count the span', () => {
-  const counts = [{ hashtag: 'thatsafirst', posts_count: 1200, checked_date: '2026-08-01' }];
+test('the dedup read count is surfaced as a diagnostic', () => {
+  // A zero here with a non-empty table is the signature of the 2026-08-10
+  // incident, so it must stay visible in the run data.
   const out = runNodeJson('build-request', {
-    nodes: base({ 'Get counts': counts,
-                  'Apify - Hashtag stats': [{ hashtag: '#ThatsAFirst', postsCount: 1000 }] }) });
-  const row = out.hashtagStats.find(h => h.hashtag === 'thatsafirst');
-  assert.ok(row, 'hashtags are compared lowercased and without #');
-  assert.equal(row.delta, 0, 'a shrinking total must clamp to 0, not go negative');
-  assert.ok(row.spanDays >= 1);
-});
-
-test('diagnostic row counts are surfaced', () => {
-  const out = runNodeJson('build-request', {
-    nodes: base({ 'Get sent': [{ url: 'https://x/p/Q/' }], 'Get counts': [] }) });
+    nodes: base({ 'Get sent': [{ url: 'https://x/p/Q/' }] }) });
   assert.equal(out.sentRowCount, 1);
-  assert.equal(out.countsRowCount, 0);
 });

@@ -5,8 +5,6 @@
 const cfg = $('Config').first().json;
 const lookbackDays = cfg.lookbackDays || 30;
 const runDate = new Date().toISOString().slice(0,10);
-const HASHTAGS = (cfg.hashtags || ['thatsafirst','tryingnewthings','tryingsomethingnew','newexperience','newexperiences'])
-  .map(h => String(h).replace(/^#/, '').toLowerCase());
 
 // Canonicalize a post URL for robust dedup: lowercase, strip query/fragment,
 // drop protocol + www, unify Instagram reel/tv -> p, remove trailing slash.
@@ -86,45 +84,6 @@ const fscore = (c) => firstRe.test(String(c.text || '')) ? 1 : 0;
 cands.sort((a,b) => (fscore(b) - fscore(a)) || (((b.likes||0)+(b.comments||0)) - ((a.likes||0)+(a.comments||0))));
 cands = cands.slice(0, 30);
 
-// ── Hashtag deltas: today's total vs. the most recent earlier stored total ──
-let statRows = [];
-try { statRows = $('Apify - Hashtag stats').all().map(i => i.json); } catch (e) {}
-const todayCounts = {};
-for (const r of statRows) {
-  const name = String(r.hashtag != null ? r.hashtag : (r.name != null ? r.name : (r.query != null ? r.query : (r.tag != null ? r.tag : ''))))
-    .replace(/^#/, '').toLowerCase();
-  const n = Number(r.postsCount != null ? r.postsCount : (r.posts != null ? r.posts : r.mediaCount));
-  if (name && isFinite(n)) todayCounts[name] = n;
-}
-
-const prev = {};
-let countRows;
-try { countRows = $('Get counts').all().map(i => i.json); }
-catch (e) { throw new Error('Get counts has not executed before Build request - check node wiring/order. ' + e.message); }
-for (const r of countRows) {
-  const name = String(r.hashtag || '').replace(/^#/, '').toLowerCase();
-  const d = String(r.checked_date || '');
-  if (!name || !d || d >= runDate) continue;
-  if (!prev[name] || d > prev[name].checked_date) prev[name] = { checked_date: d, posts_count: Number(r.posts_count) || 0 };
-}
-
-const dayDiff = (a, b) => Math.max(1, Math.round((Date.parse(a) - Date.parse(b)) / 86400000));
-
-const hashtagStats = HASHTAGS
-  .filter(h => todayCounts[h] !== undefined)
-  .map(h => {
-    const postsCount = todayCounts[h];
-    const p = prev[h];
-    return {
-      hashtag: h,
-      postsCount: postsCount,
-      checked_date: runDate,
-      first: !p,
-      delta: p ? Math.max(0, postsCount - p.posts_count) : null,
-      spanDays: p ? dayDiff(runDate, p.checked_date) : null
-    };
-  });
-
 const system = [
 'Te egy napi felfedező szerkesztő vagy. A bemenetben Instagram és TikTok posztok jelöltjei vannak (szöveges adatok, [index] hivatkozással). Válassz ki legfeljebb 5 posztot, ahol valaki ELŐSZÖR csinál valamit. A döntéshez és a paraméterekhez a poszt SZÖVEGÉT (caption, hashtagek, helyszín) használd. Írj végig helyes, ÉKEZETES magyar nyelven (á, é, í, ó, ö, ő, ú, ü, ű).',
 '',
@@ -180,4 +139,4 @@ const body = {
 // Diagnostics: a silently-empty dedup read is what made this class of bug
 // invisible for weeks. Surface the input sizes in the node output.
 return [ { json: { body: body, runDate: runDate, candidateCount: cands.length, cands: cands,
-                   hashtagStats: hashtagStats, sentRowCount: sentRows.length, countsRowCount: countRows.length } } ];
+                   sentRowCount: sentRows.length } } ];

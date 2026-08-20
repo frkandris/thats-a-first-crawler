@@ -4,7 +4,7 @@ title: n8n
 description: The self-hosted workflow-automation platform that runs the digest.
 resource: https://<n8n-host>
 tags: [n8n, automation, platform]
-timestamp: 2026-08-18T00:00:00Z
+timestamp: 2026-08-20T00:00:00Z
 ---
 
 [n8n](https://n8n.io) is a node-based workflow-automation tool. STRT runs a self-hosted instance.
@@ -30,10 +30,11 @@ Measured on a real run (2026-08-08), offsets from the first node:
 
 ```
 +     2ms  Apify - Instagram
-+135656ms  Build request        ← calls $('Get sent') / $('Get counts') here
-+239678ms  Get sent             ← but they only run now
-+239702ms  Get counts
++135656ms  Build request        ← calls $('Get sent') here
++239678ms  Get sent             ← but it only runs now
 ```
+*(`Get counts` was in this trace too; that node was removed with the
+[hashtag counts](/project/decisions.md#drop-hashtag-counts) on 2026-08-20.)*
 
 `$('Node')` on a node that has **not executed yet throws**. Wrapped in `try {} catch {}` — as our code
 was — it silently yields an empty list, so a filter built on it passes everything through and *looks*

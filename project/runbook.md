@@ -4,7 +4,7 @@ title: Runbook
 description: How to operate, test, and troubleshoot the digest workflow.
 resource: https://<n8n-host>/workflow/<workflow-id>
 tags: [operations, runbook, troubleshooting]
-timestamp: 2026-08-19T00:00:00Z
+timestamp: 2026-08-20T00:00:00Z
 ---
 
 Operational guide for [That's a First Digest](/project/thats-a-first-digest.md).
@@ -18,8 +18,8 @@ Operational guide for [That's a First Digest](/project/thats-a-first-digest.md).
 ## Manual run / test
 
 Open the workflow in [n8n](/tech/n8n.md) → **Execute workflow**. A full run is well under a minute
-(Apify scrape + hashtag stats + one text-only [router](/tech/meetapedia-router.md) call). It got noticeably
-faster on 2026-08-07: the ~15 image downloads and the vision call are gone. Check the new email in Gmail.
+(two Apify scrapes + one text-only [Groq](/tech/groq.md) call). A full run measured **64 s** on
+2026-08-19. Check the new email in Gmail.
 
 **Which model answered?** Since 2026-08-19 it is always `openai/gpt-oss-120b` on our own
 [Groq](/tech/groq.md) key — pinned deliberately, so a change in digest quality is a prompt or data
@@ -31,9 +31,9 @@ with that write's timestamp, and the **Publish** button was correctly greyed out
 to publish. Earlier guidance here said the opposite; it was wrong for this n8n version. Still open the
 editor after an API change: an *inactive* workflow, or an edit made in the editor itself, does need Publish.
 
-**Testing the hashtag delta:** the block needs at least two runs on different dates to show anything —
-the first run only seeds [the counts table](/project/hashtag-counts-datatable.md) and the block is
-omitted. To verify sooner, insert a row manually with a `checked_date` of yesterday.
+**Local checks without touching production:** `bash scripts/check.sh` runs the node tests and the wiki
+lint in under a second; add `--live` to also assert that `nodes/*.js` and the wiring still match the
+running workflow. See [engineering-practices](/format/engineering-practices.md).
 
 ## Editing a Code node
 
@@ -57,11 +57,9 @@ then **Publish** to activate. See [build-request-node](/project/build-request-no
 | **429** `quota_exhausted` / **502** `all providers rate limited` | every free provider is out of *daily* budget. **Expected to happen sometimes**: the Meetapedia crawler shares the ledger and had spent the whole day's capacity by 11:52 UTC on 2026-08-18 | `GET /v1/quota` shows per-provider `remaining`. A retry does not help — the budget is daily. Options, in order: wait for the next midnight-UTC rollover; add a per-key quota in the gateway; enable the DeepSeek standby. See [decisions](/project/decisions.md#meetapedia-router) |
 | **429** `rate_limited` / **502** `upstream_unavailable` | a per-minute window or a provider hiccup | the node retries 3× at 5 s and the router picks another provider; nothing to do unless it fails all three |
 | **503** `router_disabled` | the Meetapedia deploy has `router.enabled: false` or no provider keys | operator fix in that project; meanwhile use the DeepSeek standby |
-| Digest missing and the router is down for good | gateway outage | **Rollback:** enable the disabled `DeepSeek` node, connect `Build request → DeepSeek → Parse response` (keep the router node's slot order — `Split counts` must stay second), set `model` back to `'deepseek-v4-pro'` in Build request, Publish. The `DeepSeek header` credential is still in place |
+| Digest missing and the router is down for good | gateway outage | **Rollback is not available today:** that account has answered `402 Payment required` since 2026-08-15. Top it up first, then enable the disabled `DeepSeek` node, connect `Build request → DeepSeek → Parse response`, set `model` back to `'deepseek-v4-pro'` and `max_tokens` to 8000 (no TPM limit there), Publish |
 | `Cannot assign to read only property 'name' of object 'Error: Referenced node doesn't exist'` | a Code node calls `$('Old Node Name')` after that node was renamed | update the string; grep every Code node after any rename — see [n8n](/tech/n8n.md#renaming) |
 | Email went out but the post repeats the next day | **Split picks / Insert row** failed after Gmail already sent | the send is upstream of the dedup write, so a failure there is silent from the recipient's side. Backfill the missing rows into [the dedup table](/project/dedup-datatable.md) rather than re-running (a re-run sends a second email). |
-| Hashtag block missing from the email | first run, or no comparable previous row | expected — it needs a second run on a later date ([hashtag-counts-datatable](/project/hashtag-counts-datatable.md)) |
-| Hashtag deltas absurdly large after downtime | delta spans several days | by design; the block prints `(N nap alatt)` |
 | Any Apify node: **403** "Forbidden" / `Monthly usage hard limit exceeded` | The Apify account's **monthly hard limit** is hit. Distinct from the 402 below: the hard limit blocks outright. Seen 2026-08-09 and 08-10 — two mornings with no digest. | Raise or reset the hard limit in [Apify billing](https://console.apify.com/billing/subscription). Nothing downstream runs, so no email at all. |
 | The same posts arrive on consecutive mornings | dedup read was empty — check `sentRowCount` on the Build request output | if it is `0` with a non-empty table, `Get sent` is not an ancestor of Build request — see [dedup-datatable](/project/dedup-datatable.md#silent-failure) |
 | Any Apify node: **402** "Payment required … you will exceed your remaining usage of $X" | The Apify **usage limit** for the billing cycle is reached (X is what is left, often fractions of a cent). Not a workflow bug — the run dies at the first Apify call and nothing downstream executes. | Check [console.apify.com/billing](https://console.apify.com/billing/subscription): raise the cap, or wait for the cycle to roll over. Observed 2026-08-07 with $0.000899 left. |
@@ -93,9 +91,8 @@ run. In the executions tab, in this order:
 | Item | Per run | Per month |
 |---|---|---|
 | Apify post scrapers (12/hashtag × 5 × 2 platforms) | ~$0.32 | ~$9.6 |
-| Apify hashtag analytics (5 results) | ~$0.007 | ~$0.21 |
 | [Meetapedia router](/tech/meetapedia-router.md) `auto`, text-only (~5k in / ~1k out) | **$0** | **$0** |
-| **Total** | **~$0.33** | **~$9.9** |
+| **Total** | **~$0.32** | **~$9.6** |
 
 The model line went ~$8/month (Claude Opus vision) → ~$0.09 (DeepSeek, 2026-08-07) → **$0** (free-tier
 router, 2026-08-18). Apify is now the entire budget, and the only thing worth optimising. The router's

@@ -12,7 +12,7 @@ and [log.md](/log.md) for history.
 - [build-request-node](/project/build-request-node.md) — normalization, dedup, hashtag deltas, model request.
 - [parse-response-node](/project/parse-response-node.md) — validate, score, sort, render HTML.
 - [dedup-datatable](/project/dedup-datatable.md) — the sent-URL dedup store.
-- [hashtag-counts-datatable](/project/hashtag-counts-datatable.md) — daily hashtag totals behind the delta block.
+- [hashtag-counts-datatable](/project/hashtag-counts-datatable.md) — *superseded*; the daily hashtag totals and why the delta block was dropped.
 - [credentials](/project/credentials.md) — Apify / router / DeepSeek / Gmail credentials.
 - [runbook](/project/runbook.md) — operate, test, and troubleshoot.
 - [decisions](/project/decisions.md) — why the system is built the way it is.
